@@ -1,0 +1,8 @@
+# patina ships static assets only — no build artifacts, no runtime data.
+.DS_Store
+*.log
+node_modules/
+*_cache/
+.venv/
+# never commit work-domain identifiers or experimental copies
+/scratch/
