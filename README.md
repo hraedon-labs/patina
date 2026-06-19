@@ -29,6 +29,7 @@ overrides one thing: `--accent`.
 | `fonts/` | IBM Plex Mono (self-hosted woff2, OFL). |
 | `sync.sh` | Vendors the above into a tool's static dir. |
 | `docs/token-contract.md` | The canonical token list and the rules for using it. |
+| `docs/patterns.md` | Component patterns catalog — shared shapes for topbar, tables, pills, etc. |
 
 ## How a tool consumes patina
 

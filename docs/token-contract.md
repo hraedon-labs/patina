@@ -58,13 +58,17 @@ When adding a tool, choose an accent that is (1) not another tool's, (2) not a
 status hue, (3) legible on both themes, and record it here and as
 `accents/<tool>.css`.
 
-## Open question — shared components
+## Shared component patterns
 
-Today each tool keeps its own component CSS with its own class prefix
-(cert-watch `cw-`, gpo-lens `gp-`). Tokens are shared; components are not. A
-future step could extract the genuinely common components (topbar, nav, stat
-strip, table, pill, chip, callout, panel, empty state) into a neutral-prefixed
-`components.css` that patina also vendors — eliminating the duplicated component
-CSS. That requires choosing a neutral prefix and migrating both tools' templates,
-so it is deferred to `plans/001`. Until then, the rule stands: **share tokens,
-not class names.**
+Each tool keeps its own component CSS with its own class prefix (cert-watch
+`cw-`, gpo-lens `gp-`). Tokens are shared; component classes are not. A future
+step could extract the genuinely common components into a neutral-prefixed
+`components.css` that patina also vendors — that decision is deferred to
+`plans/001`.
+
+In the meantime, **`patterns.md`** catalogs the shared component shapes
+(topbar, stat strip, table, pill, chip, callout, panel, empty state, etc.)
+with canonical structure, token usage, and naming conventions. New tools should
+follow those patterns so the family stays visually coherent even without a
+shared stylesheet. The rule stands: **share tokens and shapes, not class
+names.**
