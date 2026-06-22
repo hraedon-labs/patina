@@ -1,0 +1,18 @@
+/* patina accent: dossier — plum, the registry/seal finish. A provenance ledger
+   reads as a record-keeping instrument; plum occupies the only open hue
+   quadrant (cert-watch holds warm gold, gpo-lens holds verdigris, the status
+   tokens hold green/amber/red/blue). Concatenated after tokens.css to override
+   the default accent. */
+:root,
+:root[data-theme="dark"] {
+  --accent: #b07cc6;
+  --accent-2: #b07cc6;
+  --accent-soft: rgba(176, 124, 198, 0.13);
+  --accent-line: rgba(176, 124, 198, 0.42);
+}
+:root[data-theme="light"] {
+  --accent: #7a4d8f;
+  --accent-2: #7a4d8f;
+  --accent-soft: rgba(122, 77, 143, 0.10);
+  --accent-line: rgba(122, 77, 143, 0.38);
+}
