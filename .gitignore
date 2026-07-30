@@ -6,3 +6,6 @@ node_modules/
 .venv/
 # never commit work-domain identifiers or experimental copies
 /scratch/
+
+# never commit the local denylist (identifier gate)
+.identifiers-denylist.local
