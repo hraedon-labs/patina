@@ -1,0 +1,18 @@
+/* patina accent: sluice — aqua, the flow/water register.
+   A sluice gate controls water flow; the accent evokes that register.
+   Hue sits at ~190° (cyan), distinct from cert-watch bronze (~38°),
+   gpo-lens verdigris (~172°, more green), and dossier plum (~282°).
+   Concatenated after tokens.css to override the default accent. */
+:root,
+:root[data-theme="dark"] {
+  --accent: #5fcde4;
+  --accent-2: #5fcde4;
+  --accent-soft: rgba(95, 205, 228, 0.13);
+  --accent-line: rgba(95, 205, 228, 0.42);
+}
+:root[data-theme="light"] {
+  --accent: #2a8ca8;
+  --accent-2: #2a8ca8;
+  --accent-soft: rgba(42, 140, 168, 0.10);
+  --accent-line: rgba(42, 140, 168, 0.38);
+}
