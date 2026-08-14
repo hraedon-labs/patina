@@ -31,6 +31,18 @@ sync script) for the tool family. Read `README.md` for the what/why and
 - **No work-domain identifiers** in committed files (family rule). patina holds
   only generic CSS/JS/fonts, so this is easy to keep true — keep it that way.
 
+## Conventions require decisions
+
+Family rule (owner, 2026-08-14): a convention that never went through an
+explicit decision — a plan, a recorded rationale — is **not set in stone**,
+however old or widespread. Some things become conventions by lack of focus
+rather than by choice (the status quad was Tailwind's defaults verbatim for a
+year; nobody chose that). When work touches a convention, check whether it was
+decided; if it merely accreted, it is revisable, and proposing the
+first-principles alternative is in scope. Once decided, record the decision
+where the value lives (`docs/token-contract.md`, the relevant plan) so it
+stops being revisable by accident in the other direction.
+
 ## Conventions that DO carry over from the family
 
 - Theme is dark-by-default, driven by `data-theme` on `<html>`, set before paint.

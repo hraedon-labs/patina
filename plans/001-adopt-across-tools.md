@@ -4,8 +4,14 @@
 gpo-lens consume it via `sync.sh` instead of each carrying a hand-maintained
 copy — and decide the shared-component question.
 
-Status: charter / not started. patina ships the assets + `sync.sh`; no tool
-consumes it yet (both still carry their own `tokens.css`).
+Status: partially executed, record corrected 2026-08-14. Reality on the
+estate: **sluice** and **dossier** consume vendored copies (dossier's has
+~830 lines of `ds-` components edited into it — extraction is Plan 005 WI-4);
+**gpo-lens** still hand-syncs its own `tokens.css` (WI-1 not done);
+**cert-watch** forked — identical values, renamed tokens (`--sp-*`), so WI-2's
+"differences should be nil" no longer holds and reconciliation needs a mapping
+(now Plan 005 WI-3). WI-3's shared-component question is decided by Plan 006.
+This plan stays as the adoption ledger; execution mechanics moved to Plan 005.
 
 ## Work items
 
