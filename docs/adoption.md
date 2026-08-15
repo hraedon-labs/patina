@@ -202,25 +202,38 @@ yours.
 
 ## Two things that bite on first sync
 
-**Your linter will want to edit the vendored checker, and editing it breaks its
-stamp.** `patina-check.py` is vendored verbatim and self-verifies, so any repo
-that lints its *whole* tree hits a standoff on day one: gpo-lens's CI runs
-`ruff check .` and `ruff format --check .`, both of which flag the checker
-(E741, E501, and a format pass would rewrap it), and every fix invalidates the
-stamp on the one file the standard most insists you do not touch. Two correct
-rules, no overlap.
+**Your linter will want to edit the vendored files, and editing them breaks
+their stamps.** `patina-check.py` and the vendored docs are byte-verified, so
+any repo that lints its *whole* tree hits a standoff on day one, and every fix
+invalidates the stamp on the files the standard most insists you do not touch.
+Two individually correct invariants — "vendored code stays byte-identical" and
+"all repository files satisfy our formatter" — that collide wherever the
+formatter reaches the vendor tree.
 
-Exclude the vendored file from your linter — it is not your code, and patina is
-responsible for its style:
+**patina cannot fix this upstream, and there is now evidence rather than an
+assumption.** Trivially portable complaints were fixed at the source (an
+ambiguous `l`, one long line), but the two adopting consumers run mutually
+unsatisfiable configurations: cert-watch selects `E,F,I,B,UP,SIM` at
+line-length 100 and is now clean, while gpo-lens additionally enables `FURB`,
+`ISC`, `PLW` and `EXE` and reports **30** findings on the same files —
+`re.M` versus `re.MULTILINE`, implicit string concatenation inside a tuple,
+`subprocess.run` without an explicit `check=`, a shebang on a file the vendor
+step made non-executable. These are style preferences, not defects, and no
+single source can satisfy all of them. Exclusion is the answer.
+
+Exclude the vendored paths from your linter and formatter — they are not your
+code, and their style is patina's problem:
 
 ```toml
 # pyproject.toml
 [tool.ruff]
-extend-exclude = ["scripts/patina-check.py"]
+extend-exclude = ["scripts/patina-check.py", "docs/patina"]
 ```
 
-cert-watch never hit this because its CI does not lint `scripts/`. Any consumer
-that lints everything will.
+Every consumer that lints its whole tree hits this. cert-watch's CI runs
+`ruff check .`, so it will too — it simply had not yet, because its adoption
+branch has never been pushed. That is worth noting on its own: a collision this
+mechanical went unseen for a day purely because CI had not run.
 
 **Put the checker and the ratchet outside the web root.** `sync.sh`'s third
 argument chooses where `patina-check.py` lands; pass your `scripts/` or

@@ -490,7 +490,9 @@ def check_contract(gate: Gate, contract: set, sources, prefix: str | None):
                 "(contract rule: shared tokens unprefixed, tool tokens prefixed)"
             )
     undefined = {
-        n: l for n, l in referenced.items() if n not in contract and n not in defined
+        name: where
+        for name, where in referenced.items()
+        if name not in contract and name not in defined
     }
     for name, label in sorted(undefined.items()):
         gate.fail(f"{label}: var({name}) resolves to nothing (typo or drift)")
@@ -688,7 +690,8 @@ def check_ratchet(gate: Gate, sources, ratchet_file: Path, update: bool, classes
     for fp, v in violations.items():
         was = baseline.get(fp, {}).get("n", 0)
         if v["n"] > was:
-            new.append(f"{v['where']}: {v['sample']}" + ("" if was == 0 else f"  (was {was}, now {v['n']})"))
+            grew = "" if was == 0 else f"  (was {was}, now {v['n']})"
+            new.append(f"{v['where']}: {v['sample']}{grew}")
     if new:
         gate.fail(
             f"colour-literal ratchet: {len(new)} NEW violation(s) not in the "
