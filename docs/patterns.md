@@ -113,6 +113,11 @@ Tokens: `--panel`, `--border`, `--radius-lg`.
 
 ## 6 — Stat strip
 
+> **Demoted 2026-08-14 (Plan 007):** not a landing-page hero. A stat strip as
+> the top of a dashboard is the banned default in `archetypes.md` — counts
+> belong on the filter bar as clickable scopes; use this shape only inside a
+> summary rail or on a dedicated posture page.
+
 A grid of metric cards with hairline dividers — the dashboard "instrument
 panel" feel.
 

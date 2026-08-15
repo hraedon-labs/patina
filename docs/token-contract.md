@@ -53,11 +53,22 @@ Each tool picks one distinct, non-status accent. "Same metal, different finish."
 | cert-watch | struck bronze (certificate seal) | `#c9a25a` | `#8a6a28` |
 | gpo-lens | verdigris (patinated bronze) | `#5fb3a3` | `#2c7d6e` |
 | dossier | plum (registry seal) | `#b07cc6` | `#7a4d8f` |
+| sluice | aqua (flow register) | `#5fcde4` | `#2a8ca8` |
 | _(default)_ | neutral warm steel | `#b9a98c` | `#6f6552` |
 
 When adding a tool, choose an accent that is (1) not another tool's, (2) not a
 status hue, (3) legible on both themes, and record it here and as
 `accents/<tool>.css`.
+
+## Tool-local tokens: the prefix rule (Plan 005, 2026-08-14)
+
+Shared tokens are unprefixed and defined only in `tokens.css`. A tool that
+needs its own tokens (`--cw-topbar-h`, `--gp-grid-gap`) MUST prefix them with
+its 2–3 letter tool prefix, so contract vocabulary and local vocabulary can
+never collide, and a consumer can never shadow a contract value (redefining an
+unprefixed token in tool CSS is a conformance failure — `check_patina.py`
+enforces both directions). If a local token turns out to be generally useful,
+promote it into this contract; don't drop the prefix locally.
 
 ## Shared component patterns
 
