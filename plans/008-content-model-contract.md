@@ -78,10 +78,17 @@ binary choices; never open-ended taste questions.**
 - **WI-2 — cert-watch pilot: `UI-INVENTORY.md`.** The 2026-08-14 survey data
   is essentially the draft (7 fields, endpoints, surfaces already enumerated).
   Include the latent 8th field (`hosts.expected_issuers`, surfaced nowhere).
-- **WI-3 — The notes adjudication (human).** First real application of rule 1:
-  merge `certificates.notes`/`hosts.notes`, or keep both with enforced scope
-  labels and host-notes removed from the cert page. Present both options as
-  rendered screenshots. Record the decision in the inventory.
+- **WI-3 — The notes adjudication (human).** ~~Present both options as
+  rendered screenshots.~~ **DECIDED 2026-08-14 (owner, from 3-way render):
+  Option 1 — merge to ONE host-scoped notes field.** `certificates.notes`
+  migrates (concat) into `hosts.notes` and the column is dropped; the cert
+  page gets a single "Notes" panel scoped "operational notes for this host";
+  the placeholder stops inviting owner/runbook (structured fields own those);
+  certless hosts keep notes (BC-020's need). Rationale: the structured fields
+  already own the content cert-notes solicited, host notes must exist
+  regardless, and the host/cert scope distinction proved invisible at 1:1.
+  Implementation is a cert-watch change (migration + template + endpoint
+  removal) — queued, not yet built. Recorded in cert-watch UI-INVENTORY.md.
 - **WI-4 — Detector.** Build + run advisory in cert-watch CI against rendered
   pages; tune until it flags the (pre-fix) notes case and nothing spurious.
 - **WI-5 — Author + install the skill.** Trigger on UI-bearing family repos;

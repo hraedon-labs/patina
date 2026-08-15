@@ -1,7 +1,11 @@
 # Plan 006 — shared components + macros (deciding Plan 001 WI-3)
 
-**Status:** Draft — proposed 2026-08-14. Decides the question Plan 001 WI-3
-parked. **Human decision required:** WI-1 ratifies the direction reversal.
+**Status:** RATIFIED 2026-08-14 (owner) — WI-1 done. Patina ships the
+reference implementation; new tools vendor it. Amendment to the original
+proposal, also from the owner: existing tools MAY be retrofitted when the
+initial pain is worth the downstream simplification — retrofit is permitted,
+opportunistic remains the default; assess per-tool when its UI is next
+touched. WI-2..4 (extraction, agent-notes proof, docs) not yet built.
 **Owner:** patina. Depends on Plan 005 (the gate is what makes shared code
 safe to share).
 

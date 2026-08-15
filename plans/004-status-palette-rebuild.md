@@ -8,8 +8,12 @@ also reports plan 002's known `--text-3` warnings without failing on them).
 WI-4 re-sync: cert-watch done (pilot); dossier blocked on its `ds-` extraction
 (Plan 005 WI-4 — a re-sync today would destroy the 830 lines edited into its
 unstamped vendored file); gpo-lens/switchboard land with their adoption
-(Plan 005 WI-5); sluice decommissioned, skip. WI-5 (crit/expired un-merge
-re-evaluation) still open — cert-watch presentation question, owner call.
+(Plan 005 WI-5); sluice decommissioned, skip. WI-5 CLOSED 2026-08-14 (owner concurred with measurement): the un-merge is
+impossible — light-theme `--cw-expired` `#c41d6f` vs the new crit `#b64461`
+is ΔE 6.4 under NORMAL vision (floor 15) and 2.2 under deuteranopia. The
+crit/expired presentation merge is permanent; "expired" is distinguished by
+its label (secondary encoding). `--cw-expired` can be retired from cert-watch
+when convenient.
 **Owner:** patina. Companion to Plan 002 (quiet-tier contrast floor).
 
 ## Problem
