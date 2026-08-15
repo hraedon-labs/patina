@@ -483,6 +483,23 @@ def selftest_declaration():
             True,
             "unknown conformance facet",
         ),
+        (
+            "attested without evidence is refused -- it is the agent-authored "
+            "estate's honest state and must record the most, not the least",
+            DECL_BASE
+            + '\n[conformance.content_model]\nstate = "attested"\n'
+            + '\n[conformance.structure]\nstate = "not-applicable"\nwhy = "read-only analysis tool, no editing"\n',
+            True,
+            "needs a substantive `evidence`",
+        ),
+        (
+            "attested WITH evidence passes",
+            DECL_BASE
+            + '\n[conformance.content_model]\nstate = "attested"\nevidence = "one concept one control: snapshot via /ingest, triage via /findings/{id}/triage"\n'
+            + '\n[conformance.structure]\nstate = "not-applicable"\nwhy = "read-only analysis tool, no editing"\n',
+            False,
+            "",
+        ),
     ]
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
@@ -498,6 +515,80 @@ def selftest_declaration():
 
 
 selftest_declaration()
+
+
+def selftest_undefined_classes():
+    """A class named in markup with no rule renders as an unstyled div, and no
+    other check in the gate notices. cert-watch shipped `cw-gap-9` referenced
+    for months while undefined; gpo-lens's adoption surfaced twelve more,
+    including an entire posture grid."""
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        static = build_consumer(tmp)
+        (static / "css" / "tool.css").write_text(
+            ".tl-panel { color: var(--text); }\n", encoding="utf-8"
+        )
+        tpl = tmp / "templates"
+        tpl.mkdir()
+        (tpl / "page.html").write_text(
+            '<div class="tl-panel">ok</div>\n', encoding="utf-8"
+        )
+
+        def run(*extra):
+            return subprocess.run(
+                [
+                    PY, str(tmp / "patina-check.py"), str(static),
+                    "--prefix", "tl", "--no-theme", "--extra", str(tpl),
+                    "--ratchet-file", str(tmp / "ratchet.json"), *extra,
+                ],
+                capture_output=True,
+                text=True,
+            )
+
+        run("--update-ratchet")
+        proc = run()
+        results.append(
+            (
+                proc.returncode == 0 and "has a rule" in proc.stdout,
+                "undefined classes: fully-styled markup passes",
+                proc.returncode,
+                [],
+            )
+        )
+
+        (tpl / "page.html").write_text(
+            '<div class="tl-panel"><span class="tl-ghost">x</span></div>\n',
+            encoding="utf-8",
+        )
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode != 0 and "tl-ghost" in out,
+                "undefined classes: a class with no rule anywhere fails",
+                proc.returncode,
+                out.strip().splitlines()[:3],
+            )
+        )
+
+        # Dynamic names cannot be checked, and guessing would teach people to
+        # distrust the gate.
+        (tpl / "page.html").write_text(
+            '<div class="tl-panel"><span class="{{ tone }}">x</span></div>\n',
+            encoding="utf-8",
+        )
+        proc = run()
+        results.append(
+            (
+                proc.returncode == 0,
+                "undefined classes: template-computed names are skipped, not guessed",
+                proc.returncode,
+                (proc.stdout + proc.stderr).strip().splitlines()[:3],
+            )
+        )
+
+
+selftest_undefined_classes()
 
 
 def selftest_content_model():

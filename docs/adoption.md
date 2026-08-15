@@ -23,8 +23,12 @@ state = "enforced"
 state = "enforced"
 
 [conformance.content_model]
-state = "attested"
-note  = "no UI-INVENTORY.md yet; concepts and their single controls enumerated below"
+state    = "attested"
+evidence = """snapshot: create /ingest, delete /ingest/delete. finding triage \
+(status + 2000-char note): one inline form per row, /findings/{id}/triage. \
+No second control for either concept; /baseline /golden /resultant /ask \
+persist nothing."""
+note     = "no UI-INVENTORY.md yet"
 
 [conformance.structure]
 state = "deferred"
@@ -55,9 +59,13 @@ a surface brief requires an inventory.
 Two things settle it:
 
 - **A scalar cannot say "not applicable."** "This tool stopped at L1" and "this
-  tier does not apply to this tool" are completely different facts, and the
-  second is the common case — a read-only analysis tool has no content model to
-  inventory, and never will. A ladder can only record it as a shortfall.
+  tier does not apply to this tool" are completely different facts, and a ladder
+  can only record the second as a shortfall. gpo-lens is the case in point, and
+  not in the way expected: its *structure* facet is genuinely `deferred` because
+  six of its pages match none of the five archetypes — they are a diff view, a
+  coverage reconciliation, a per-principal evaluation trace. Those are shapes
+  patina has no vocabulary for, not failures. Under a ladder gpo-lens could only
+  express that as having failed a tier it was never sensibly subject to.
 - **A number implies a direction.** If L3 exists, L3 is better, whatever the
   prose says; people and agents optimise toward it. The plan had to spend a
   paragraph disclaiming the semantics of its own data structure, which is how
@@ -74,7 +82,7 @@ destroys the information that justified separating them.
 |---|---|---|
 | `enforced` | a script decides it, and it blocks | — |
 | `advisory` | a script checks it, and it does not block | — |
-| `attested` | the author claims it per change (see below) | — |
+| `attested` | the author claims it per change (see below) | `evidence` |
 | `reviewed` | a human decided it | `reviewed_through` |
 | `deferred` | deliberately not done yet | `why`, `until` |
 | `not-applicable` | this facet does not apply to this tool | `why` |
@@ -99,6 +107,15 @@ doing"` alone is a standards graveyard, and the gate refuses it.
 `patina-allow` needs one: an unexplained exemption is a disabled check with
 better manners. Without this, a tool declares everything `not-applicable` and
 shows all green.
+
+**`attested` must carry its `evidence`, and needs it more than the others do.**
+Every repo in this family is agent-written, which makes `reviewed` — "a human
+decided it" — structurally unreachable for the agent doing the work. So
+`attested` is the honest state for most real work here, and the first version
+of this schema required nothing of it: gpo-lens's adoption produced a concrete
+enumeration of every concept, control and write endpoint, and the only place to
+put it was a TOML comment. The state that fits agent authorship must not also
+be the one that records the least. `evidence` is where the enumeration goes.
 
 **`reviewed` names a commit, not a date.** A date tells you when somebody
 looked; a revision lets the tool work out whether anything relevant happened
@@ -147,6 +164,33 @@ and vendoring has bought nothing. See `CHANGELOG.md` for what a version bump
 means and for the per-release impact metadata (`visual-change`,
 `baseline-review`, `consumer-code-change`) that tells you what adopting one
 actually costs.
+
+## Two things that bite on first sync
+
+**Your linter will want to edit the vendored checker, and editing it breaks its
+stamp.** `patina-check.py` is vendored verbatim and self-verifies, so any repo
+that lints its *whole* tree hits a standoff on day one: gpo-lens's CI runs
+`ruff check .` and `ruff format --check .`, both of which flag the checker
+(E741, E501, and a format pass would rewrap it), and every fix invalidates the
+stamp on the one file the standard most insists you do not touch. Two correct
+rules, no overlap.
+
+Exclude the vendored file from your linter — it is not your code, and patina is
+responsible for its style:
+
+```toml
+# pyproject.toml
+[tool.ruff]
+extend-exclude = ["scripts/patina-check.py"]
+```
+
+cert-watch never hit this because its CI does not lint `scripts/`. Any consumer
+that lints everything will.
+
+**Put the checker and the ratchet outside the web root.** `sync.sh`'s third
+argument chooses where `patina-check.py` lands; pass your `scripts/` or
+`tests/` directory. Likewise pass `--ratchet-file` explicitly. The defaults are
+convenient for a first run and would otherwise publish both files.
 
 ## Deviation
 
