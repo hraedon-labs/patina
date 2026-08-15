@@ -45,8 +45,9 @@ touch this, because its rules never named *concepts*. These rules do.
    per record type, it is doing the wrong job.
 
 5. **Surface briefs.** Each page keeps `ui/surfaces/<route>.md` — a few
-   lines: intent, archetype (`archetypes.md`), concepts owned, concepts
-   deliberately NOT shown. An agent editing a page reads its brief first. A
+   lines: **the operator questions this page answers** (in decision order —
+   this line IS the page's derivation, see `archetypes.md` "Deriving a
+   page"), archetype, concepts owned, concepts deliberately NOT shown. An agent editing a page reads its brief first. A
    feature that contradicts the brief amends the brief in the same PR, never
    silently. The "NOT shown" line is load-bearing: it is how the next
    feature learns that an omission was a decision.

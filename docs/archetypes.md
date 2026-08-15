@@ -20,6 +20,43 @@ urgency-ordered lists), not skeleton avoidance.
 the actual failure it prevents or the operator decision it improves. A rule
 that can't is design-system gardening and doesn't belong here.
 
+## Deriving a page (do this before picking an archetype)
+
+The method (ratified 2026-08-14; it derives pages instead of imitating or
+avoiding them):
+
+1. **Write the operator questions first** — the questions this page must
+   answer, in decision order. For a monitoring dashboard they are usually:
+   is anything wrong right now? what needs attention soon? is a concentration
+   of future work coming? what specifically do I deal with first? can I trust
+   this is current?
+2. **Identify the minimum decision-complete information** that answers them.
+   Not "minimal" — a page can contain very little and still be bad because it
+   forces the operator elsewhere for the obvious next question. The target is
+   the smallest set that lets someone correctly understand the state and
+   decide whether to act.
+3. **Choose the simplest representation for each piece.** Information and
+   representation are separate decisions: "12 expiring within 30 days" is
+   first-order (it must exist); whether it renders as a stat card, a compact
+   status band (`47 certificates · 3 expired · 12 due ≤30d · 5 unmonitored`),
+   a filter chip, a sentence, or a histogram annotation is second-order. You
+   can attack four-equal-rectangles sameness at the representation layer
+   without ever sacrificing the information hierarchy. Provenance ("last
+   scan 06:00") is decision-relevant but rarely a decision variable — keep
+   it present and quiet.
+4. **Reach for an archetype below as a pattern, not a starting assumption.**
+   If the derivation converges on a conventional layout, ship the convention —
+   convention is often many people independently finding the good solution.
+   On another family tool the decision-complete minimum might genuinely be
+   just a table; on cert-watch it isn't, because aggregate state has
+   operational meaning independent of any single certificate.
+
+**The element-rejection test:** for any proposed addition (issuer pie chart,
+scan success %, average lifetime, added-this-month…) the question is never
+"is this interesting" or "do dashboards traditionally have it" — it is *what
+operator question does this answer on this page?* No good answer, no
+placement.
+
 ## Tier 1 — invisible shapes: standardize aggressively
 
 Tables, form fields, chips, pills, callouts, empty states, breadcrumbs,
@@ -41,11 +78,13 @@ the same PR; never override locally.
 **Family grammar (ratified 2026-08-14, Plan 007 WI-2 — mockup A chosen by
 owner + blind review):** summary → trend → urgent objects.
 
-- **A summary strip answers the operator's standing questions in order** —
+- **A summary answers the operator's standing questions in order** —
   how many / how many need attention / how many are already bad / overall
   posture. Each stat is semantically loaded: zero renders neutral, thresholds
   come from the product's alerting semantics, and a stat that merely restates
-  the table below it gets cut.
+  the table below it gets cut. The *representation* is second-order: four
+  cards is one option; a single compact status band is an equally legitimate
+  rendering of the same hierarchy (see "Deriving a page", step 3).
 - **A trend block gives the page its center of gravity** and answers "is
   there a wall of work coming?" — domain-bucketed (expiry months, not generic
   time series), with the operational threshold drawn on it (the `+30d`
