@@ -113,10 +113,13 @@ Tokens: `--panel`, `--border`, `--radius-lg`.
 
 ## 6 — Stat strip
 
-> **Demoted 2026-08-14 (Plan 007):** not a landing-page hero. A stat strip as
-> the top of a dashboard is the banned default in `archetypes.md` — counts
-> belong on the filter bar as clickable scopes; use this shape only inside a
-> summary rail or on a dedicated posture page.
+> **Plan 007 (2026-08-14, revised same day after blind review):** the stat
+> strip is the *dashboard* summary header — see `archetypes.md`. Its rule is
+> semantic, not positional: every stat answers a standing operational
+> question, zero renders neutral, thresholds come from alerting semantics,
+> and a stat that restates the table below it gets cut. On an *inventory*
+> page, counts are filter-bar scope chips instead — there a count's job is
+> to filter.
 
 A grid of metric cards with hairline dividers — the dashboard "instrument
 panel" feel.

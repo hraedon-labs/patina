@@ -1,9 +1,33 @@
 # Plan 007 — page archetypes and banned defaults (structure tier 2)
 
-**Status:** Draft — proposed 2026-08-14. **Human decision required:** the
-dashboard grammar is a family identity call — present as rendered mockups,
-side by side, per the review protocol (screenshots, binary choices). **Owner:**
-patina.
+**Status:** WI-1/WI-2 executed 2026-08-14; **WI-2 decided the OPPOSITE of
+this plan's proposal** — see Outcome. **Owner:** patina.
+
+## Outcome (2026-08-14) — the decision, and the reversal
+
+Mockups A (stat-strip dashboard) and B (object-first, counts-on-filters) were
+built with identical data and reviewed two ways: by the owner, and blind (an
+external evaluator judging pixels without this plan's rationale). **Both chose
+A.** The blind review also identified the reasoning error in this plan's
+Problem section: the chain "common → LLM prior → AI fingerprint → credibility
+problem → avoid" only establishes its first two links, and "the layout a
+generic prompt won't produce" is not a design criterion — a generic prompt
+also won't produce many terrible layouts. The replicated-by-a-generic-prompt
+incident is evidence the shape is *conventional*, not that it is *wrong*.
+
+What survives of the original concern: a generic skeleton filled with generic
+content does read as machine output. The fix is semantic specificity — stats
+with operational thresholds, a domain-bucketed trend with the `+30d` alerting
+boundary drawn on it, urgency-ordered lists, zero-renders-neutral — not
+skeleton avoidance.
+
+Ratified into `docs/archetypes.md`: **Dashboard** = summary → trend → urgent
+objects (mockup A's grammar, with the semantic-loading rules); **Inventory**
+= scopes → objects, with mockup B's filter-bar count chips — B's real
+contribution — as the inventory's count grammar. Two archetypes, not one
+forced onto both jobs. Also adopted from the review: **the rule-test** —
+every new patina rule must name the actual failure it prevents or the
+operator decision it improves (now in AGENTS.md).
 
 ## Problem
 
@@ -59,10 +83,14 @@ centered-everything on data pages.
 - **WI-2 — Dashboard grammar decision (human).** Two rendered mockups of the
   cert-watch dashboard content: (a) current stat-strip layout, (b) object-first
   + counts-on-filters. Side by side, both themes. Binary choice.
-- **WI-3 — cert-watch assessment (pilot).** Score the live dashboard against
-  the chosen grammar; if it fails, file the reshape as a cert-watch plan (out
-  of patina's scope to execute — this WI only produces the assessment and
-  screenshots).
+- **WI-3 — cert-watch assessment (pilot).** Map the two ratified archetypes
+  onto cert-watch's real IA (post-055: Certificates at `/`, Posture,
+  Activity, Settings — there is no separate dashboard page). Proposal to
+  assess: `/` takes the Inventory grammar (full table + filter-bar count
+  chips), `/posture` takes the Dashboard grammar (summary strip + expiry
+  histogram with the +30d marker + urgent shortlist). Produce the assessment
+  and screenshots; the reshape, if any, is a cert-watch plan and an owner
+  call.
 - **WI-4 — Wire into the skill** (Plan 008): archetype selection becomes a
   stated step — an agent building a page names its archetype out loud before
   writing markup, and pages must record their archetype in the surface brief.

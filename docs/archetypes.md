@@ -1,13 +1,24 @@
 # patina page archetypes (structure tier 2)
 
 `patterns.md` covers component shapes. This document covers whole pages — how
-a tool's screens are laid out — in two tiers with different rules. It exists
-because of a specific, dated lesson (Plan 007): **structural sameness is the
-AI fingerprint, not visual sameness.** In 2026-08 the family's four-stat
-dashboard layout was replicated near-exactly by an AI tool given a generic
-"vulnerability dashboard" prompt — because that layout *is* the statistical
-default. Distinctive tokens spent on a default skeleton still read as
-machine output, and that costs credibility.
+a tool's screens are laid out — in two tiers with different rules.
+
+**The criterion (revised 2026-08-14 after blind review):** a page's structure
+arises from the domain's operational questions, not from a generic archetype —
+**and not from avoiding one.** Common is not wrong; *unconsidered* is wrong.
+The first draft of this file banned the four-stat dashboard hero because it is
+the dominant AI-training-data dashboard shape; a blind review (an evaluator
+judging rendered mockups without the rationale) preferred it, and the review
+identified the reasoning error: "common → LLM prior → AI fingerprint →
+credibility problem → avoid" only establishes the first two links. The
+recognizable-skeleton worry has a real kernel — a generic skeleton filled with
+generic content reads as machine output and gets discounted — but the fix is
+**semantic specificity** (thresholds from the domain, counts that are scopes,
+urgency-ordered lists), not skeleton avoidance.
+
+**The rule-test (from the same review):** every archetype rule below must name
+the actual failure it prevents or the operator decision it improves. A rule
+that can't is design-system gardening and doesn't belong here.
 
 ## Tier 1 — invisible shapes: standardize aggressively
 
@@ -16,33 +27,49 @@ chains (`patterns.md` §§4, 7–14). These carry no authorship signal — nobod
 clocks a table as machine-made. Use the canonical shapes everywhere, without
 variation for variation's sake. Coherence here is pure win.
 
-## Tier 2 — page archetypes: deliberate grammar, named banned defaults
+## Tier 2 — page archetypes: deliberate grammar, named failure modes
 
 Every page names its archetype (in its surface brief — see
-`content-model.md`). Each archetype below states the family layout, the
-**banned default**, and *why* it is banned — the why stays in this file
-because an unexplained rule gets optimized away by the next agent session
-that finds the default more natural. If a page genuinely needs a different
-structure, amend this file in the same PR; never override locally.
+`content-model.md`). Each archetype below states the family layout and its
+**banned failure mode**, with the *why* in-file — an unexplained rule gets
+optimized away by the next agent session that finds the failure mode more
+natural. If a page genuinely needs a different structure, amend this file in
+the same PR; never override locally.
 
-### Dashboard (the tool's landing view)
+### Dashboard (posture at a glance)
 
-**Family grammar (pending WI-2 ratification — mockups A/B):**
+**Family grammar (ratified 2026-08-14, Plan 007 WI-2 — mockup A chosen by
+owner + blind review):** summary → trend → urgent objects.
 
-- **The primary object table leads the page.** The first viewport answers
-  "what needs attention", not "how many things exist".
-- **Counts live on the filter bar as clickable scopes** — `expiring-30d (12)`
-  is a filter you can click, not a poster. A count you can act on is a tool;
-  a count in a bubble is decoration.
-- At most a **narrow summary rail** for genuinely cross-cutting posture
-  (grade, next expiry, last scan). One rail, not a row of heroes.
+- **A summary strip answers the operator's standing questions in order** —
+  how many / how many need attention / how many are already bad / overall
+  posture. Each stat is semantically loaded: zero renders neutral, thresholds
+  come from the product's alerting semantics, and a stat that merely restates
+  the table below it gets cut.
+- **A trend block gives the page its center of gravity** and answers "is
+  there a wall of work coming?" — domain-bucketed (expiry months, not generic
+  time series), with the operational threshold drawn on it (the `+30d`
+  marker). This is what makes the page *this product's* dashboard instead of
+  anyone's.
+- **An urgency-ordered object list follows** — abbreviated, actionable, not
+  the full inventory.
 
-**Banned default:** the four-stat-card hero row above a chart-and-table
-stack. *Why:* it is the single most common dashboard shape in AI training
-data and the layout every generic prompt produces; it also inverts priority —
-it spends the best screen real estate restating what the table already shows.
-`patterns.md` §6 (stat strip) is hereby demoted: legal inside a rail or a
-posture page, never as the landing hero.
+**Banned failure mode:** the *decorative summary* — stat cards without
+operational meaning (counts with no threshold, no neutral-zero, no consequence)
+and generic analytics without domain semantics. *Why:* it spends the page's
+strongest position saying nothing the operator can act on; it is also,
+executed generically, what makes a dashboard read as machine output.
+
+### Inventory (the complete object list)
+
+**Family grammar:** scopes → objects. **Counts live on the filter bar as
+clickable scope chips** (`expiring-30d (12)`) — on this page a count's job is
+to filter, so it is a control, not a stat. The full table with search and
+sorting leads; environment-level posture is compressed or absent (it has a
+dashboard to live on). *Why the split:* dashboard and inventory answer
+different questions ("how bad is it?" vs "show me everything matching X");
+2026-08 mockups that tried to make one page do both duplicated the same
+numbers in two shapes and were rejected for exactly that.
 
 ### Record detail (one certificate, one GPO, one host)
 
@@ -85,7 +112,8 @@ consumer-app grammar leaking into an operations tool.
 
 - An agent building or reshaping a page states the archetype out loud before
   writing markup, and records it in the page's surface brief.
-- A page that matches a banned default is a review finding even if every
-  token and component on it is conformant.
-- New archetypes (wizard, report, diff view …) get added here — with a banned
-  default and a why — before the first page ships in that shape.
+- A page that matches an archetype's banned failure mode is a review finding
+  even if every token and component on it is conformant.
+- New archetypes (wizard, report, diff view …) get added here — with a failure
+  mode, a why, and a rule-test answer — before the first page ships in that
+  shape.

@@ -64,9 +64,14 @@ convention; the *values* should not be stock. Constraints for candidates:
 
 ## Acceptance
 
-- No status token in `tokens.css` equals a Tailwind palette value.
-- Validator + CVD simulation pass recorded in the plan folder; contrast gate
-  covers the quad in CI.
+- Every status token passes the contrast floors and CVD gates, verified by
+  the extended gate script in CI. (Amended 2026-08-14 after review: the
+  original "no token equals a Tailwind value" criterion was wrong — provenance
+  is not a defect. The defects are the measured ones: light-theme ok at
+  2.9:1, deutan collapse of ok/warn/crit. If a stock value were optimal, we
+  would use it shamelessly; candidates were produced by constraint search,
+  not by avoiding Tailwind.)
+- Validator + CVD simulation pass recorded in the plan folder.
 - Consumers re-synced with no regression the owner wants rolled back.
 
 ## If declined

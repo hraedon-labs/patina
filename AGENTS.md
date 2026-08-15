@@ -43,6 +43,20 @@ first-principles alternative is in scope. Once decided, record the decision
 where the value lives (`docs/token-contract.md`, the relevant plan) so it
 stops being revisable by accident in the other direction.
 
+Two guards on the rule itself (from the 2026-08-14 blind review of Plan 007,
+where the first draft banned a layout for being an LLM attractor and the
+review overturned it):
+
+- **The rule-test.** Every new patina rule must name the actual failure it
+  prevents or the operator decision it improves. "A model would produce
+  this" is not a failure; a rule that can't pass the test is design-system
+  gardening. Provenance is never a defect — if a stock value or a common
+  shape is measurably optimal, use it shamelessly and record why.
+- **Blind review for identity decisions.** When a rule or grammar is being
+  ratified, show an evaluator the rendered options WITHOUT the rationale.
+  If the rationale and the pixels disagree, believe the pixels first and
+  re-examine the rationale.
+
 ## Conventions that DO carry over from the family
 
 - Theme is dark-by-default, driven by `data-theme` on `<html>`, set before paint.
