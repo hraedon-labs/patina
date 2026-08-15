@@ -69,6 +69,15 @@ avoiding them):
    just a table; on cert-watch it isn't, because aggregate state has
    operational meaning independent of any single certificate.
 
+**One persistent page grid (added 2026-08-14, from the WI-3 prototype
+review):** a page keeps a stable set of horizontal edges from top to bottom;
+subdivisions happen *inside* components, not by changing the page's columns.
+A column that exists for one row only (e.g. a side rail beside a single
+band) makes a mathematically centered page *feel* off-center — the eye never
+gets a stable vertical axis, and full-width elements above/below read as
+shoved aside. Facts that would create a one-row column belong in an existing
+region instead (the page-header baseline is usually free real estate).
+
 **The element-rejection test:** for any proposed addition (issuer pie chart,
 scan success %, average lifetime, added-this-month…) the question is never
 "is this interesting" or "do dashboards traditionally have it" — it is *what
