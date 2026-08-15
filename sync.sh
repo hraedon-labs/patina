@@ -71,6 +71,14 @@ trap 'rm -f "$block"' EXIT
 block_hash="$(sha256sum "$block" | cut -d' ' -f1)"
 
 out="$target/css/tokens.css"
+
+# A consumer may keep its own CSS below the end marker; preserve that tail
+# across re-syncs so updating patina never eats tool-local additions.
+tail_tmp="$(mktemp)"
+if [ -f "$out" ]; then
+  awk 'found { print } /^\/\* patina:end \*\// { found = 1 }' "$out" > "$tail_tmp"
+fi
+
 {
   echo "/* VENDORED FROM patina -- do not edit here. Edit patina and re-run sync.sh. */"
   echo "/* accent: $accent */"
@@ -78,7 +86,9 @@ out="$target/css/tokens.css"
   echo "/* patina:begin $rev sha256:$block_hash */"
   cat "$block"
   echo "/* patina:end */"
+  cat "$tail_tmp"
 } > "$out"
+rm -f "$tail_tmp"
 
 # theme.js gets a first-line stamp over the rest of its bytes.
 theme_hash="$(sha256sum "$here/theme.js" | cut -d' ' -f1)"
