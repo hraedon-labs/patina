@@ -14,6 +14,7 @@ Exit:  0 all cases behaved, 1 otherwise.
 """
 
 import hashlib
+import json
 import re
 import shutil
 import subprocess
@@ -710,6 +711,88 @@ def selftest_css_grammar_boundaries():
 
 
 selftest_css_grammar_boundaries()
+
+
+def selftest_context_exemption_scope():
+    """openbia's findings: the exemption must not launder a competing theme
+    system, and obeying the block-scope instruction must not still cost you a
+    colour violation per line."""
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        static = build_consumer(tmp)
+        tpl = tmp / "templates"
+        tpl.mkdir()
+        (tpl / "p.html").write_text('<div class="tl-a">x</div>\n', encoding="utf-8")
+
+        def run(*extra):
+            return subprocess.run(
+                [
+                    PY, str(tmp / "patina-check.py"), str(static),
+                    "--prefix", "tl", "--no-theme", "--extra", str(tpl),
+                    "--ratchet-file", str(tmp / "ratchet.json"), *extra,
+                ],
+                capture_output=True, text=True,
+            )
+
+        # A rival theme system is NOT an undefined rendering context.
+        (static / "css" / "tool.css").write_text(
+            ".tl-a { color: var(--text); }\n"
+            "@media (prefers-color-scheme: dark) {\n"
+            "  /* patina-allow-context: we prefer our own dark values */\n"
+            "  :root { --panel: #1a1a1a; }\n}\n",
+            encoding="utf-8",
+        )
+        run("--update-ratchet")
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode != 0 and "drift this rule exists to stop" in out,
+                "the context exemption refuses a competing theme system",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
+        # A blessed print block costs no ratchet entries.
+        (static / "css" / "tool.css").write_text(
+            ".tl-a { color: var(--text); }\n"
+            "@media print {\n"
+            "  /* patina-allow-context: paper is not a context patina defines */\n"
+            "  :root { --bg: #ffffff; --text: #000000; --border: #999999; }\n}\n",
+            encoding="utf-8",
+        )
+        run("--update-ratchet")
+        proc = run()
+        out = proc.stdout + proc.stderr
+        ratchet = json.loads((tmp / "ratchet.json").read_text())
+        results.append(
+            (
+                proc.returncode == 0 and not ratchet["color_literals"],
+                "a blessed context block adds no colour-ratchet entries",
+                proc.returncode,
+                [f"ratchet entries: {len(ratchet['color_literals'])}"]
+                + out.strip().splitlines()[:3],
+            )
+        )
+
+        # An unprefixed-class consumer is told the check did not run.
+        (static / "css" / "tool.css").write_text(
+            ".plain { color: var(--text); }\n", encoding="utf-8"
+        )
+        (tpl / "p.html").write_text('<div class="plain">x</div>\n', encoding="utf-8")
+        run("--update-ratchet")
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                "check 5 did not run" in out,
+                "a consumer with no prefixed classes is told check 5 did not run",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
+
+selftest_context_exemption_scope()
 
 
 def selftest_regression_from_adoptions():

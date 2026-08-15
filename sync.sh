@@ -102,6 +102,17 @@ out="$target/css/tokens.css"
 # first-run scenario (a tool that already hand-maintains tokens.css), so it
 # must refuse rather than destroy. Every ambiguous shape is a stop.
 # ---------------------------------------------------------------------------
+# --adopt promises "the current file is backed up first", but only ever looked
+# at $out. A greenfield consumer keeps its stylesheet somewhere else entirely
+# (openbia's was static/openbia.css), so --adopt was accepted, did nothing, and
+# said nothing -- the flag's guarantee silently not applying to the shape it
+# exists to serve. Nothing was lost, but the operator was not told that.
+if [ "$adopt" -eq 1 ] && [ ! -f "$out" ]; then
+  echo "note: --adopt: no file at $out, so nothing was backed up." >&2
+  echo "      If this tool's stylesheet lives elsewhere, it is untouched and" >&2
+  echo "      still linked by your templates -- retire it deliberately." >&2
+fi
+
 if [ -f "$out" ]; then
   n_begin="$(grep -c '^/\* patina:begin .* \*/$' "$out" || true)"
   n_end="$(grep -c '^/\* patina:end \*/$' "$out" || true)"

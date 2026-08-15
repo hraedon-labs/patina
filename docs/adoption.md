@@ -4,6 +4,9 @@ A consumer commits a `patina.toml` at its repo root saying which parts of
 patina it claims, and by what mechanism. `check_patina.py --declaration
 patina.toml` validates the claims and reports them.
 
+Pair `--no-theme` with the checker whenever you synced `--no-theme`: without it
+the gate fails on a `theme.js` the consumer deliberately does not have.
+
 **This file is consumer-owned.** `sync.sh` never writes or rewrites it. The
 standard is upstream-owned; the adoption declaration is downstream-owned. That
 boundary is the point: patina says what conformance *means*, each tool says
@@ -274,16 +277,20 @@ Two individually correct invariants — "vendored code stays byte-identical" and
 "all repository files satisfy our formatter" — that collide wherever the
 formatter reaches the vendor tree.
 
-**patina cannot fix this upstream, and there is now evidence rather than an
-assumption.** Trivially portable complaints were fixed at the source (an
-ambiguous `l`, one long line), but the two adopting consumers run mutually
-unsatisfiable configurations: cert-watch selects `E,F,I,B,UP,SIM` at
-line-length 100 and is now clean, while gpo-lens additionally enables `FURB`,
-`ISC`, `PLW` and `EXE` and reports **30** findings on the same files —
-`re.M` versus `re.MULTILINE`, implicit string concatenation inside a tuple,
-`subprocess.run` without an explicit `check=`, a shebang on a file the vendor
-step made non-executable. These are style preferences, not defects, and no
-single source can satisfy all of them. Exclusion is the answer.
+**patina cannot fix this upstream for everyone.** Trivially portable complaints
+were fixed at the source (an ambiguous `l`, one long line), and two of the four
+consumers — cert-watch (`E,F,I,B,UP,SIM` at 100) and openbia (`E,F,I,UP,B,SIM`
+at 100) — now report nothing on the vendored files. gpo-lens additionally
+enables `FURB`, `ISC`, `PLW` and `EXE` and reports **30** findings on the same
+bytes: `re.M` versus `re.MULTILINE`, implicit string concatenation inside a
+tuple, `subprocess.run` without an explicit `check=`, a shebang on a file the
+vendor step made non-executable. Style preferences, not defects — and no single
+source satisfies every consumer's rule set at once.
+
+So the collision is **not universal**; it depends on how strict your config is.
+Exclusion is still the right answer, because the reason is byte-identity rather
+than style: a formatter that rewrites a vendored file breaks its stamp whether
+or not the rewrite was an improvement.
 
 Exclude the vendored paths from your linter and formatter — they are not your
 code, and their style is patina's problem:
