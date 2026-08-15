@@ -44,7 +44,11 @@ A flex row containing the brand, nav links, spacer, and action buttons.
 > viewport edge while content is centered creates two competing left edges,
 > and the whole page reads as indented even though it's mathematically
 > centered. Wrap the topbar contents in the same `.<prefix>-wrap` container
-> the page uses.
+> the page uses. And match the chrome's *density* to the page's: on a dense
+> instrument-panel UI a spacious 52px+ topbar with a generously padded
+> active pill reads as a separate design regime — keep it ~46–48px with a
+> quiet selected-tab treatment (low-contrast fill, tight padding), not a
+> button.
 
 ```
 .<prefix>-topbar       display: flex; align-items: center; height: 58px;
