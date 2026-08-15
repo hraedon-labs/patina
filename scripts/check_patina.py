@@ -20,7 +20,11 @@ Checks:
   3. token contract -- every var(--x) referenced in tool CSS must be defined
                        by the contract block or by the tool itself; the tool
                        must not redefine a contract token; with --prefix, all
-                       tool-defined tokens must carry --<prefix>-.
+                       tool-defined tokens must carry --<prefix>-. EXCEPT
+                       inside an at-rule (@media print, forced-colors) carrying
+                       a `patina-allow-context: <reason>`: those are rendering
+                       contexts patina does not define, and before the
+                       exemption a tool could not print legibly and conform.
   4. colour ratchet -- raw colour literals (#hex / rgb / hsl / oklch) in tool
                        CSS are fingerprinted against a committed baseline.
                        A NEW fingerprint fails even if the total is unchanged,
