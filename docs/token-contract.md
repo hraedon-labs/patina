@@ -84,6 +84,19 @@ component assignments; a tool still chooses.
 | `--fs-xl` | 22 | the page title | display or hero text |
 | `--fs-2xl` | 30 | a single dominant figure — the one number a page exists to show | anything a page has more than one of |
 
+**The scale is written for glancing, and that is a console inheritance.**
+openbia's adoption (2026-08-15) is the evidence: `--fs-base` at 13.5px is a
+console assumption, `--fs-sm` at 12.5px is ruled out for intake-form labels by
+its own contraindication, and `--fs-xs`'s "not for anything read for more than
+a glance" simply does not describe a stakeholder attesting a downtime procedure
+or a manager reading a four-section report. openbia resolved it by selecting a
+different step — `body { font-size: var(--fs-md) }`, which shadows nothing and
+is explicitly permitted above — but the contract has **no vocabulary for saying
+that deliberately**, so the choice reads as carelessness rather than a decision.
+A second gap from the same adoption: two heading steps (`--fs-lg` panels,
+`--fs-xl` page title) do not cover a document that legitimately nests three
+heading levels, and `--fs-md` is contraindicated as a heading substitute.
+
 Deliberately **not** doing yet: semantic aliases (`--text-metadata` and
 friends). Document the meaning the scale has actually earned before minting
 names for it.

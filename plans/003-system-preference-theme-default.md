@@ -1,6 +1,18 @@
 # Plan 003 — system-preference theme default
 
-**Status:** Draft — proposed 2026-07-29. **Human decision required — family
+**Status:** Draft — proposed 2026-07-29. **Evidence arrived 2026-08-15 (openbia
+adoption):** this is no longer a preference question. `theme.js:14` is
+`localStorage.getItem(KEY) || "dark"`, applied unconditionally, and
+`prefers-color-scheme` is consulted nowhere in patina. There is **no
+consumer-settable default**, so a light-first tool cannot express itself
+through the shared bootstrap at all — it must bypass it. openbia did: synced
+`--no-theme` and pinned `<html data-theme="light">` server-side, **losing
+automatic dark mode it previously had**. openbia is a stakeholder-intake and
+management-report tool, not a console; dark-by-default is a cert-watch
+inheritance, and the mechanism offers no way to say so. Note openbia ships no
+JavaScript at all (offline-bundle requirement), so any fix must have a JS-free
+path — a cookie set by a plain `GET /theme/{dark,light}` link qualifies, and is
+incidental presentation state rather than domain state. **Human decision required — family
 identity call.** Dark-by-default is currently a stated family convention
 (AGENTS.md: "Theme is dark-by-default"); this plan proposes changing the
 *initial* default to follow the user's OS preference while keeping dark as the
