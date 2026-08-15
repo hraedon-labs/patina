@@ -236,6 +236,12 @@ def main():
     ap.add_argument("static_dir", type=Path)
     ap.add_argument("--tokens", default="css/tokens.css")
     ap.add_argument("--theme", default="theme.js")
+    ap.add_argument(
+        "--no-theme",
+        action="store_true",
+        help="consumer owns its theme bootstrap (e.g. a CSP-nonced inline "
+        "script); skip the theme.js check",
+    )
     ap.add_argument("--prefix", default=None)
     ap.add_argument("--ratchet-file", type=Path, default=None)
     ap.add_argument("--update-ratchet", action="store_true")
@@ -253,7 +259,8 @@ def main():
 
     gate = Gate()
     contract = check_tokens_block(gate, tokens_path)
-    check_theme(gate, static_dir / args.theme)
+    if not args.no_theme:
+        check_theme(gate, static_dir / args.theme)
     sources = tool_css_sources(static_dir, tokens_path)
     if contract:
         check_contract(gate, contract, sources, args.prefix)
