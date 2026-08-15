@@ -327,6 +327,55 @@ was **not** "all green". Findings, in order of how much they changed the model:
   i.e. the release-impact metadata (`visual-change: yes, baseline-review:
   required, consumer-code-change: no`) described this upgrade exactly.
 
+### 6. What dossier taught (2026-08-15) — three defects in the gate, all patina's
+
+Third consumer, and the most productive of the three. Every disagreement turned
+out to be case (b): patina accusing a consumer of a violation it had not
+committed.
+
+- **There was no legal way to print.** dossier re-maps 13 contract tokens under
+  `@media print`; the no-shadowing rule had no context exemption and patina
+  ships no print values. patina defines exactly two rendering contexts and both
+  are screen — paper is a third. A provenance tool whose printed record is an
+  audit deliverable could not both print legibly and conform, and the only
+  "compliant" routes were to stop printing or to re-plumb ~120 rules onto
+  `--ds-*` aliases so its components stopped referencing contract tokens at all
+  — destroying the thing the contract exists to protect. Fixed: at-rule-scoped
+  re-mapping is legal with a stated reason, block-scoped. **patina still owes
+  the real fix — shipping `@media print` values as a third context.** That is a
+  family concern and it needs a design decision, so it is queued, not assumed.
+- **BEM modifiers read as token declarations.** `TOKEN_DEF_RE` matched
+  `.ds-btn--crit:hover` and accused dossier of shadowing a status colour — the
+  most serious violation the contract has — on a line that declares nothing.
+  The suggested remedy was to rename the class. Every consumer using BEM would
+  have hit it.
+- **The dead-class check could not see inside at-rules.** Brace-parity splitting
+  made every selector in `@media`/`@supports` invisible, and inside those blocks
+  scanned declarations as selectors. dossier's five "dead" classes were all
+  defined, in media queries. gpo-lens's twelve were re-derived and hold.
+- **`structure` had no `attested` state.** dossier completed a full archetype
+  audit, came out clean, and had nowhere to put it. The same argument that put
+  `attested` on `content_model` — `reviewed` means a human decided, which an
+  agent-written change cannot claim — applies here, and omitting it from the
+  facet where an agent audit is most often the *only* evidence was inconsistent.
+
+Two results worth keeping beyond the fixes:
+
+- **`activity_feed.html` is the negative control the banned-modes list needed.**
+  dossier ships a page with the banned *name* and none of the banned
+  *properties*: a dense filterable reverse-chronological table with absolute
+  timestamps, no avatars, no cards. The ban is correctly scoped to card grammar
+  plus relative time rather than to the noun — which is exactly the distinction
+  Plan 007's retraction was about, now confirmed from the other direction.
+- **The content-model facet found a real defect on its first serious use.**
+  dossier's `review_note` and comment `body` are two free-text controls in the
+  same rail of the same page, both operator prose about the same work item,
+  both appended to the same event chain, both read back by the same helper into
+  the same template slot, distinguished only by a CSS modifier — and one is
+  silently discarded for non-verdict transitions. That is content-model rule 1
+  exactly, found by applying the rule rather than by anyone tripping over it.
+  Recorded in dossier's declaration; fixing it is design work.
+
 ## Acceptance
 
 - Every consumer repo declares a level, and the declaration is enforced.
