@@ -1,11 +1,16 @@
 # Plan 004 — status palette rebuild (de-Tailwind + CVD validation)
 
-**Status:** Draft — proposed 2026-08-14 (first-principles review of patina's
-stylistic choices). **Human decision required:** final values are a family
-identity call; candidates must be presented as rendered swatches on real
-components, both themes, side by side — not as hex lists. **Owner:** patina.
-Companion to Plan 002 (quiet-tier contrast floor) — same gate script, different
-tokens.
+**Status:** WI-1/WI-2/WI-3 executed 2026-08-14. Candidate **A "warm & quiet"**
+chosen (owner + review, from rendered component swatches, both themes, vs the
+incumbent and candidate B). Values + full rationale recorded in
+`docs/token-contract.md`; floors gated by `scripts/check_contrast.py` (which
+also reports plan 002's known `--text-3` warnings without failing on them).
+WI-4 re-sync: cert-watch done (pilot); dossier blocked on its `ds-` extraction
+(Plan 005 WI-4 — a re-sync today would destroy the 830 lines edited into its
+unstamped vendored file); gpo-lens/switchboard land with their adoption
+(Plan 005 WI-5); sluice decommissioned, skip. WI-5 (crit/expired un-merge
+re-evaluation) still open — cert-watch presentation question, owner call.
+**Owner:** patina. Companion to Plan 002 (quiet-tier contrast floor).
 
 ## Problem
 

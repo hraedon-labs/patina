@@ -30,6 +30,22 @@ border). Links, focus rings, wordmark, active nav. **Never** status.
 ### Status (shared verbatim — do not re-tint per tool)
 `--ok` `--warn` `--crit` `--info`, each with a matching `*-soft` tint.
 
+**Decided 2026-08-14 (plan 004): the "warm & quiet" quad** — dark: sage
+`#7fd091` / antique gold `#ce9d44` / terracotta `#cc6050` / steel `#60aeda`;
+light: deep inks `#004e19` / `#836101` / `#b64461` / `#25729e`. Chosen from
+three constraint-searched candidates rendered on real components (owner +
+review concurred). Every value ≥4.5:1 on `--bg` and `--panel` in both themes;
+all 6 status pairs ≥8 ΔE under protanopia/deuteranopia/tritanopia simulation
+(Machado 2009, severity 1.0), normal-vision ≥15. The previous quad — which
+happened to be Tailwind emerald/amber/red-400 — was replaced for its measured
+failures (light ok 2.90:1; deutan collapse of ok/warn/crit at ΔE 4.1–5.5),
+NOT for its provenance. Two hue choices are physics, not taste: light-theme
+warn is golden ochre (sRGB has no dark high-chroma amber at 4.5:1 on warm
+paper) and light-theme crit runs crimson (warm-red vs amber is not
+protan-separable at this contrast). `scripts/check_contrast.py` gates the
+floors in CI; changing these values again requires plan-004-grade CVD
+validation, not just the gate.
+
 ### Type
 Faces: `--font-sans` (system UI), `--font-mono` (IBM Plex Mono — figures,
 labels, identifiers). Scale: `--fs-xs` 11 · `--fs-sm` 12.5 · `--fs-base` 13.5 ·
