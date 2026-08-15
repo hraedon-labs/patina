@@ -59,10 +59,12 @@ usage() {
 
 want_theme=1
 adopt=0
+docs_dir=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --no-theme) want_theme=0; shift ;;
     --adopt)    adopt=1; shift ;;
+    --docs)     docs_dir="${2:-}"; [ -n "$docs_dir" ] || { echo "error: --docs needs a directory" >&2; exit 2; }; shift 2 ;;
     -h|--help)  usage ;;
     --*)        echo "error: unknown flag: $1" >&2; exit 2 ;;
     *)          break ;;
@@ -191,7 +193,64 @@ check_hash="$(tail -n +2 "$check_src" | sha256sum | cut -d' ' -f1)"
 } > "$checks_dir/patina-check.py"
 chmod +x "$checks_dir/patina-check.py"
 
-echo "synced patina ($rev) -> $target"
+# ---------------------------------------------------------------------------
+# --docs: ship the RULES, not just the values.
+#
+# The estate's UIs are written by agents, and until now sync.sh vendored
+# tokens, fonts, a theme toggle and a checker -- but not one line of the
+# standard those things enforce. An agent working in a consumer had no local
+# copy of the rules it was meant to follow. Adopting gpo-lens made the cost
+# concrete, so the fix is deliberately boring: copy the docs, stamp them,
+# verify them, stop.
+# ---------------------------------------------------------------------------
+version="$(cat "$here/VERSION" 2>/dev/null || echo unknown)"
+if [ -n "$docs_dir" ]; then
+  mkdir -p "$docs_dir"
+  banner="<!-- VENDORED FROM patina $version ($rev) -- patina-owned. Do not edit,"
+  banner="$banner reformat or lint this file; edit patina and re-run sync.sh. -->"
+  entries=""
+  for src in "$here"/docs/*.md; do
+    name="$(basename "$src")"
+    h="$(sha256sum "$src" | cut -d' ' -f1)"
+    { echo "$banner"; cat "$src"; } > "$docs_dir/$name"
+    [ -n "$entries" ] && entries="$entries,"
+    entries="$entries
+    \"$name\": \"$h\""
+  done
+  cat > "$docs_dir/patina-docs.json" <<JSON
+{
+  "patina_version": "$version",
+  "patina_rev": "$rev",
+  "note": "Hashes cover the SOURCE bytes; each vendored file carries one extra banner line above them.",
+  "files": {$entries
+  }
+}
+JSON
+  cat > "$docs_dir/OWNERSHIP.md" <<'OWN'
+# Who owns what in this directory
+
+Everything in here except this file is **patina-owned**: vendored verbatim from
+the patina repository and verified by `check_patina.py --docs`. Do not edit,
+reformat, or lint these files. Exclude this directory from your formatter --
+"vendored code stays byte-identical" and "all repository files satisfy our
+formatter" are both correct rules, and they collide here.
+
+**patina-owned** (upstream decides; a sync overwrites your changes):
+  the vendored docs in this directory, `patina-check.py`, the patina block in
+  `css/tokens.css`, `theme.js`, `fonts/`.
+
+**Consumer-owned** (you decide; a sync never touches these):
+  `patina.toml` -- your conformance declaration, including which facets you
+  claim and the evidence for them; `UI-INVENTORY.md`; your surface briefs and
+  any recorded deviations; your ratchet baseline; all of your own CSS,
+  including anything below the `/* patina:end */` marker.
+
+The standard is upstream-owned. What you claim about your adoption of it is
+yours.
+OWN
+fi
+
+echo "synced patina $version ($rev) -> $target"
 echo "  css/tokens.css  (tokens + $accent accent; stamped sha256:${block_hash:0:12}...)"
 if [ "$want_theme" -eq 1 ]; then
   echo "  theme.js        (stamped)"
@@ -200,6 +259,9 @@ else
 fi
 echo "  fonts/          ($(ls "$here/fonts"/*.woff2 | wc -l | tr -d ' ') woff2 + licence)"
 echo "  patina-check.py -> $checks_dir/ (stamped)"
+if [ -n "$docs_dir" ]; then
+  echo "  docs/           -> $docs_dir/ ($(ls "$here"/docs/*.md | wc -l | tr -d ' ') files + manifest + OWNERSHIP.md)"
+fi
 echo
 echo "Wire the gate in the consumer's CI. For drift detection (not just"
 echo "integrity), check out patina there and pass --upstream <patina-checkout>."

@@ -165,6 +165,41 @@ means and for the per-release impact metadata (`visual-change`,
 `baseline-review`, `consumer-code-change`) that tells you what adopting one
 actually costs.
 
+## Vendoring the rules
+
+```
+./sync.sh --docs <consumer>/docs/patina <accent> <static-dir> <checks-dir>
+```
+
+This copies patina's docs into the consumer, each with a one-line provenance
+banner, plus `patina-docs.json` (a manifest of source hashes) and
+`OWNERSHIP.md`. `check_patina.py --docs <dir>` verifies them against the
+manifest, and with `--upstream` against patina at the revision they claim.
+Same version semantics as the token block: **mismatched-with-its-own-rev is
+drift and fails; a newer upstream is an upgrade and does not.**
+
+The rules have to be local because the estate's UIs are written by agents. Up
+to 0.5.0, `sync.sh` shipped tokens, fonts, a theme toggle and a checker — and
+not one line of the standard those things enforce. An agent working in a
+consumer had no copy of the rules it was meant to follow, and adopting gpo-lens
+made the cost concrete rather than theoretical.
+
+### The ownership boundary
+
+More useful than a generic "do not edit generated files" warning, and written
+into `OWNERSHIP.md` at sync time:
+
+- **patina-owned** — the vendored docs, `patina-check.py`, the block inside
+  `css/tokens.css`, `theme.js`, `fonts/`. Upstream decides; a sync overwrites
+  local changes. Do not edit, reformat, or lint them.
+- **consumer-owned** — `patina.toml` and its evidence, `UI-INVENTORY.md`,
+  surface briefs and deviation records, the ratchet baseline, and all of your
+  own CSS including anything below `/* patina:end */`. A sync never touches
+  these.
+
+The standard is upstream-owned. What you claim about your adoption of it is
+yours.
+
 ## Two things that bite on first sync
 
 **Your linter will want to edit the vendored checker, and editing it breaks its
@@ -201,10 +236,28 @@ brief and carries on:
 archetype: local/diff-view — deviation; patina-proposal: <link or none>
 ```
 
-The deviation is legal immediately; nothing blocks the consumer. patina harvests
-deviations across tools when convenient, and a shape reaching for the same
-solution in two independent tools is a good **trigger for review** — not
-automatic promotion, since two tools can make the same mistake independently.
+The deviation is legal immediately; nothing blocks the consumer.
+
+**The promotion rule:** *recurrence within a consumer establishes a local
+pattern; independent recurrence across consumers triggers family-pattern
+review.* Not automatic promotion — review. Two tools can reach for the same
+wrong shape, and a third page in the same product is almost no new evidence,
+because it shares the product's assumptions. A second *product* independently
+arriving at the same operator questions and the same structure is a great deal
+of evidence.
+
+Record the local name now, in the page's brief (`local/comparison`,
+`local/derivation`, whatever honestly describes it). Naming it locally costs
+nothing and is what makes the recurrence visible later.
+
+The first live candidate is gpo-lens's comparison surfaces — `baseline_diff`,
+`golden_diff`, `admx_coverage`, `resultant` — which revealed that patina's
+archetype vocabulary is **object-centric** while those pages are
+**relationship-centric**: their subject is a relationship between two objects,
+not a set of objects. That is a genuine discovery about the vocabulary. It is
+*not* yet a Comparison archetype: those four may share a conceptual family
+without sharing enough interaction grammar to justify one archetype, and they
+are all observations from a single product.
 
 The rule this replaces ("if a page needs a different structure, amend
 `archetypes.md` in the same PR") described a monorepo we do not have. patina is

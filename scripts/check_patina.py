@@ -346,6 +346,91 @@ def check_upstream(gate: Gate, vendored_text: str, block: str, rev: str, upstrea
         )
 
 
+DOC_BANNER_RE = re.compile(r"^<!-- VENDORED FROM patina .*-->$")
+
+
+def check_docs(gate: Gate, docs_dir: Path, upstream: Path | None, declared_version):
+    """Verify vendored patina docs against their manifest, and (with --upstream)
+    against patina at the revision they claim.
+
+    The rules have to be local. The estate's UIs are written by agents, and
+    until 0.5.0 sync.sh shipped tokens, fonts and a checker but not one line of
+    the standard those things enforce -- so an agent working in a consumer had
+    no copy of the rules it was meant to follow. Same version semantics as the
+    token block: mismatched-with-its-own-rev is drift and fails, a newer
+    upstream is an upgrade and does not.
+    """
+    manifest_path = docs_dir / "patina-docs.json"
+    if not manifest_path.is_file():
+        gate.fail(f"no docs manifest at {manifest_path} -- re-run sync.sh --docs")
+        return
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        gate.fail(f"docs manifest unreadable: {exc}")
+        return
+
+    rev = manifest.get("patina_rev", "?")
+    version = str(manifest.get("patina_version", "?"))
+    files = manifest.get("files") or {}
+    if not files:
+        gate.fail("docs manifest lists no files -- re-run sync.sh --docs")
+        return
+    if declared_version and version != declared_version:
+        gate.fail(
+            f"vendored docs are patina {version} but the declaration says "
+            f"{declared_version} -- re-sync, or correct the declaration"
+        )
+
+    edited = []
+    for name, want in sorted(files.items()):
+        path = docs_dir / name
+        if not path.is_file():
+            edited.append(f"{name} (missing)")
+            continue
+        text = path.read_text(encoding="utf-8")
+        first, _, rest = text.partition("\n")
+        if not DOC_BANNER_RE.match(first):
+            edited.append(f"{name} (banner removed)")
+            continue
+        if sha256_text(rest) != want:
+            edited.append(f"{name} (edited)")
+    if edited:
+        gate.fail(
+            f"{len(edited)} vendored doc(s) differ from the manifest -- these are "
+            "patina-owned; edit patina and re-sync (and exclude this directory "
+            "from your formatter):\n         " + "\n         ".join(edited[:6])
+        )
+        return
+    gate.ok(f"vendored docs intact ({len(files)} files, patina {version} @ {rev})")
+
+    if upstream is None:
+        return
+    if _git(upstream, "cat-file", "-e", f"{rev}^{{commit}}") is None:
+        gate.fail(f"docs are stamped patina {rev}, which is not in {upstream}")
+        return
+    stale = []
+    for name, want in sorted(files.items()):
+        up = _git(upstream, "show", f"{rev}:docs/{name}")
+        if up is None:
+            gate.fail(f"patina {rev} has no docs/{name} -- manifest and history disagree")
+            return
+        if sha256_text(up) != want:
+            gate.fail(
+                f"docs/{name} does not match patina {rev} -- vendored bytes were "
+                "changed and the manifest rewritten"
+            )
+            return
+        head_up = _git(upstream, "show", f"HEAD:docs/{name}")
+        if head_up is not None and sha256_text(head_up) != want:
+            stale.append(name)
+    if stale:
+        gate.note(
+            f"{len(stale)} vendored doc(s) have changed upstream since {rev} "
+            f"({', '.join(stale[:4])}) -- an upgrade is available, not a failure"
+        )
+
+
 def check_theme(gate: Gate, theme_path: Path):
     if not theme_path.is_file():
         gate.fail(f"theme.js missing: {theme_path}")
@@ -907,6 +992,13 @@ def main():
         "and reports real drift instead of mere integrity",
     )
     ap.add_argument(
+        "--docs",
+        type=Path,
+        default=None,
+        help="directory holding vendored patina docs (sync.sh --docs); verifies "
+        "them against their manifest and, with --upstream, against patina",
+    )
+    ap.add_argument(
         "--declaration",
         type=Path,
         default=None,
@@ -955,6 +1047,14 @@ def main():
         if rev:
             check_declared_version(gate, decl, rev, args.upstream)
         check_review_freshness(gate, decl)
+    if args.docs is not None:
+        if not args.docs.is_dir():
+            print(f"error: --docs is not a directory: {args.docs}", file=sys.stderr)
+            return 2
+        declared_version = None
+        if decl is not None:
+            declared_version = str(decl["patina"].get("version", "")).strip() or None
+        check_docs(gate, args.docs, args.upstream, declared_version)
     if not args.no_theme:
         check_theme(gate, static_dir / args.theme)
     sources = tool_css_sources(static_dir, tokens_path, args.extra)

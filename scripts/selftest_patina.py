@@ -393,6 +393,52 @@ def selftest_upstream_version_semantics():
             )
         )
 
+        # Vendored docs follow the same version semantics as the token block.
+        docs = tmp / "vendor-docs"
+        docs.mkdir()
+        subprocess.run(
+            [
+                str(up / "sync.sh"), "--no-theme", "--docs", str(docs),
+                "cert-watch", str(static), str(tmp),
+            ],
+            capture_output=True, text=True,
+        )
+        proc = run("--docs", str(docs), "--upstream", str(up))
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0 and "vendored docs intact" in out,
+                "docs: vendored rules verify against their manifest and patina",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
+        # patina's docs move on; the consumer is behind, not broken.
+        adoc = up / "docs" / "adoption.md"
+        adoc.write_text(adoc.read_text(encoding="utf-8") + "\n<!-- later -->\n", encoding="utf-8")
+        _commit(up, "advance a doc")
+        proc = run("--docs", str(docs), "--upstream", str(up))
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0 and "upgrade is available, not a failure" in out,
+                "docs: an upstream doc change is an upgrade, never a failure",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
+        # Editing a vendored rule locally is drift.
+        (docs / "content-model.md").write_text("# mine now\n", encoding="utf-8")
+        proc = run("--docs", str(docs))
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode != 0 and "banner removed" in out,
+                "docs: an edited vendored rule is refused",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
         # A stamp naming a revision that no longer exists cannot be verified.
         toks.write_text(
             re.sub(

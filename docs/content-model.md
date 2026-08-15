@@ -95,19 +95,43 @@ plainly in a document whose own premise is that prose enforcement fails.
   container in a rendered page, and duplicate visible labels within a
   container. **That part does not exist.** It is the half that would have
   caught the notes defect directly.
-- **Applicability.** Content-model review earns its keep when persisted mutable
-  domain state is exposed through **more than one reachable editing surface**,
-  or when multiple concepts or record relationships make ownership of that
-  state non-obvious. Reachable editing surface, not route: an API endpoint that
-  no UI calls belongs in the inventory as part of the state model, but its
-  existence alone does not trigger the requirement. Thin, read-only or
-  single-surface tools declare the facet `not-applicable` with a reason.
+- **Applicability.** Content-model conformance applies to a tool that
+  **persists operator-editable domain state**. It may be `not-applicable` when
+  the UI is genuinely read-only with respect to domain state, or persists only
+  incidental presentation/session preferences (theme choice, column widths, a
+  saved filter).
+
+  That is the whole test. It is deliberately broader than the earlier
+  formulation, which required *more than one reachable editing surface* before
+  the facet applied. gpo-lens is the counterexample that retired it: even if its
+  triage note had exactly one editing surface and perfectly obvious ownership,
+  it is still persisted operator-authored domain state, and a system storing
+  that should be able to say what it stores and where it can be changed. A tiny
+  tool with one mutable record type needs a ten-line inventory, not a
+  theological argument about whether it qualifies.
+
+  The following are **risk multipliers, not applicability triggers** — they say
+  how much attention the inventory deserves, not whether you need one:
+
+  - the same concept is editable from more than one reachable surface;
+  - mutable state crosses entity or record ownership boundaries;
+  - multiple controls appear to represent similar concepts;
+  - persisted state has no obvious editing or viewing surface at all.
+
+  "Reachable surface" still matters here, just one level down: an API endpoint
+  no UI calls belongs in the inventory as part of the state model, but it is not
+  by itself a second *control*.
 
   The defect class is **ambiguous ownership of mutable domain state** — not
   "several free-text fields". You get the same pathology with dropdowns,
   toggles, dates, tags or ownership fields; `hosts.notes` reaching five write
   paths across two control types is the shape of the bug, and text was
   incidental to it.
+
+  One more trap, from the same adoption: **"read-only tool" is a claim about the
+  wrong thing.** gpo-lens is read-only towards Active Directory and fully
+  mutable towards its own store. Ask what the tool *persists*, not where its
+  input comes from.
 - **Normative for new work, with no artifacts yet — surface briefs (rule 5).**
   No `ui/surfaces/<route>.md` exists in any family repo. The rule binds pages
   written from here on; it does not describe an existing corpus, so "read the

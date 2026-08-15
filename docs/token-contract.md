@@ -64,9 +64,29 @@ not tell you that you skipped it.
 
 ### Type
 Faces: `--font-sans` (system UI), `--font-mono` (IBM Plex Mono — figures,
-labels, identifiers). Scale: `--fs-xs` 11 · `--fs-sm` 12.5 · `--fs-base` 13.5 ·
-`--fs-md` 15 · `--fs-lg` 18 · `--fs-xl` 22 · `--fs-2xl` 30 (px). Use
-`.tnum` for tabular figures.
+labels, identifiers). Use `.tnum` for tabular figures.
+
+**Each step says what it is for (added 2026-08-15).** The scale was seven bare
+numbers, which is how it became an accidental convention: adopting gpo-lens
+turned up `--fs-xs` forked to 12px, and nothing in the contract could settle
+whether 12 was load-bearing or drift — the answer had to be reconstructed from
+that tool's own internal consistency. A number with no stated job is a value
+nobody can defend or overrule. These are roles and contraindications, not
+component assignments; a tool still chooses.
+
+| token | px | for | not for |
+|---|---|---|---|
+| `--fs-xs` | 11 | tertiary operational metadata — timestamps, eyebrow labels, table column headers, compact annotations | primary controls, or anything read for more than a glance |
+| `--fs-sm` | 12.5 | secondary text that is still read — helper text, chip and badge labels, dense table cells | body copy on a page a person stays on |
+| `--fs-base` | 13.5 | default UI text: body copy, form inputs, buttons, most table cells | headings of any level |
+| `--fs-md` | 15 | emphasised body, section leads, the value in a stat cell | a substitute for a heading token |
+| `--fs-lg` | 18 | panel and section headings | page titles |
+| `--fs-xl` | 22 | the page title | display or hero text |
+| `--fs-2xl` | 30 | a single dominant figure — the one number a page exists to show | anything a page has more than one of |
+
+Deliberately **not** doing yet: semantic aliases (`--text-metadata` and
+friends). Document the meaning the scale has actually earned before minting
+names for it.
 
 ### Space / shape
 `--space-1`…`--space-6` (4px base). `--radius-sm` `--radius` `--radius-md`
