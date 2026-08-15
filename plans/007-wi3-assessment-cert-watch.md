@@ -104,7 +104,61 @@ follow-up; either way it lands after PR #21's owner validation, which
 remains the sequencing gate for everything on this stack. Effort: small —
 comparable to one 055 page conversion.
 
-## Questions for the reviewer
+## Review outcome (2026-08-14 — reviewer + owner: Option A, modified)
+
+The reviewer concurred with Option A and answered the five questions; the
+owner agreed. The modifications, all adopted:
+
+- **Derivation corrected:** "coverage" and "posture" are different
+  questions. Coverage ("can I trust the known-state answers?") IS a
+  landing-page requirement — its omission is an epistemic failure, the most
+  serious finding of this assessment. Posture ("security quality of the
+  estate") is /posture's question and appears on `/` only as a quiet
+  cross-reference (opposite end of the strip row, grade mildly emphasized) —
+  it is not a missing dashboard metric. Both corrections now live in
+  archetypes.md.
+- **Q1 (histogram): not a requirement — prototype it.** Test: not "does it
+  change slowly" but *what bad decision becomes more likely one click away*
+  (weak answer here: noticing a busy month late). Middle ground to try
+  first: a ~50–70px compact expiry horizon integrated into the page, not a
+  boxed chart. Reject if it pushes the actionable table head below the fold
+  on an ordinary laptop viewport.
+- **Q2 (fleet grade): quiet cross-reference, strongly.** The strip has a
+  clean semantic contract — "these are scopes over the inventory immediately
+  below" — and posture doesn't filter that population, so it must not look
+  like a sixth cell.
+- **Q3 (unmonitored): neither cell nor mere chip — a coverage exception
+  control with state-dependent prominence.** Unmonitored is orthogonal to
+  the urgency partition (and may count hosts, not certificates — verify
+  before building). 0 → very quiet "Coverage complete"; >0 → warning
+  prominence; scanner failure → the global health strip takes over.
+  Exception-driven salience, not a permanent yellow card.
+- **Q4 (cards): they earn substantial click targets, not "cards."** Keep
+  the single-surface segmented strip, compress vertical padding. New patina
+  rule extracted (now in archetypes.md): summary values may be prominent
+  and persistent when the summary is itself an interaction with the primary
+  object set — prefer integrated scopes over decorative metric cards.
+- **Q5 (split trigger): viewport consumption rejected as the trigger.**
+  Scale is solved by search/filter/pagination, not URLs. Replace with
+  intent divergence: split overview from inventory only when two
+  independently substantial workflows (estate awareness vs. certificate
+  investigation) force each other's hierarchy or controls to compromise —
+  symptoms: multiple necessary analytical views, bulk actions/saved
+  filters, users visiting for awareness without the inventory (or vice
+  versa), divergent URL/state/time-horizon needs. May never trigger at any
+  count; could trigger at 100.
+- **Method addendum (the most useful WI-3 finding):** three layers, not
+  two — information → interaction model → representation. The original
+  mockup-B critique jumped from information to representation and misread
+  large labeled filter controls as decorative KPIs. Now in archetypes.md
+  step 3.
+
+Target landing page: clickable urgency strip (compressed) + coverage
+exception control + quiet `Posture B− →` link → optionally the compact
+expiry horizon if the prototype earns its height → search/pivots → full
+urgency-sorted inventory.
+
+## Questions for the reviewer (as originally posed)
 
 1. **The trend's cost:** an always-visible histogram spends ~120px of
    first-viewport height on every visit to answer a question that changes

@@ -26,25 +26,43 @@ The method (ratified 2026-08-14; it derives pages instead of imitating or
 avoiding them):
 
 1. **Write the operator questions first** — the questions this page must
-   answer, in decision order. For a monitoring dashboard they are usually:
-   is anything wrong right now? what needs attention soon? is a concentration
-   of future work coming? what specifically do I deal with first? can I trust
-   this is current?
+   answer, in decision order. For a monitoring landing page they are
+   usually: are any *known* objects bad now? which *known* objects need
+   attention soon? **is my coverage complete enough to trust those two
+   answers?** is a concentration of future work coming? what do I deal with
+   first? is the data current? The coverage question is easy to omit and
+   omitting it is an *epistemic* failure: the page confidently reports the
+   state of what it knows without making the boundary of that knowledge
+   visible. Keep the question list honest about scope, too — "is the estate's
+   security quality good?" is usually a *different page's* question; answer
+   it with a quiet cross-reference, not a duplicated metric.
 2. **Identify the minimum decision-complete information** that answers them.
    Not "minimal" — a page can contain very little and still be bad because it
    forces the operator elsewhere for the obvious next question. The target is
    the smallest set that lets someone correctly understand the state and
    decide whether to act.
-3. **Choose the simplest representation for each piece.** Information and
-   representation are separate decisions: "12 expiring within 30 days" is
-   first-order (it must exist); whether it renders as a stat card, a compact
-   status band (`47 certificates · 3 expired · 12 due ≤30d · 5 unmonitored`),
-   a filter chip, a sentence, or a histogram annotation is second-order. You
-   can attack four-equal-rectangles sameness at the representation layer
-   without ever sacrificing the information hierarchy. Provenance ("last
-   scan 06:00") is decision-relevant but rarely a decision variable — keep
-   it present and quiet.
-4. **Reach for an archetype below as a pattern, not a starting assumption.**
+3. **Design the interaction model before the representation.** There are
+   three layers, not two (added 2026-08-14 after WI-3, where skipping the
+   middle one produced a wrong critique): *information* ("Expired = 3") →
+   *interaction* ("select all expired certificates") → *representation* (a
+   large segmented cell reading EXPIRED / 3). What looks like a decorative
+   stat card at the representation layer may be a well-designed control at
+   the interaction layer — judge the middle layer first. Corollary rule:
+   **summary values may receive prominent, persistent treatment when the
+   summary itself is an interaction with the primary object set; prefer
+   integrated scopes over decorative metric cards.**
+4. **Choose the simplest representation for each piece.** "12 expiring
+   within 30 days" is first-order; whether it renders as a segmented cell, a
+   compact status band, a chip, a sentence, or a histogram annotation is
+   second-order. Provenance ("last scan 06:00") is decision-relevant but
+   rarely a decision variable — present and quiet. For *persistent
+   visibility* the test is not "does this change slowly?" (slow-moving
+   information can deserve permanent visibility) but: **what bad decision
+   becomes materially more likely when this information is one click away?**
+   "I may conclude everything is healthy when I simply don't know" (a
+   coverage gap) is a strong answer; "I may notice a busy month one click
+   later" is a weak one.
+5. **Reach for an archetype below as a pattern, not a starting assumption.**
    If the derivation converges on a conventional layout, ship the convention —
    convention is often many people independently finding the good solution.
    On another family tool the decision-complete minimum might genuinely be
