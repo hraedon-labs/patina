@@ -637,6 +637,108 @@ def selftest_undefined_classes():
 selftest_undefined_classes()
 
 
+def selftest_regression_from_adoptions():
+    """Defects the three adoptions found in the gate itself. Each was patina
+    accusing a consumer of a violation the consumer had not committed."""
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        static = build_consumer(tmp)
+        tpl = tmp / "templates"
+        tpl.mkdir()
+
+        def run(*extra):
+            return subprocess.run(
+                [
+                    PY, str(tmp / "patina-check.py"), str(static),
+                    "--prefix", "tl", "--no-theme", "--extra", str(tpl),
+                    "--ratchet-file", str(tmp / "ratchet.json"), *extra,
+                ],
+                capture_output=True, text=True,
+            )
+
+        # dossier: a BEM modifier is not a custom-property declaration, and
+        # `.x--crit:hover` is not shadowing a status colour.
+        (static / "css" / "tool.css").write_text(
+            ".tl-btn--primary:hover { color: var(--text); }\n"
+            ".tl-btn--crit:hover { color: var(--crit); }\n",
+            encoding="utf-8",
+        )
+        (tpl / "p.html").write_text(
+            '<a class="tl-btn--primary">x</a><a class="tl-btn--crit">y</a>\n',
+            encoding="utf-8",
+        )
+        run("--update-ratchet")
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0,
+                "BEM modifiers are not token declarations (`.x--crit:hover`)",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
+        # dossier: selectors inside @media were invisible, so responsive and
+        # print-only classes were reported dead.
+        (static / "css" / "tool.css").write_text(
+            "@media print {\n  .tl-only-print { color: var(--text); }\n}\n"
+            ".tl-normal { color: var(--text); }\n",
+            encoding="utf-8",
+        )
+        (tpl / "p.html").write_text(
+            '<div class="tl-only-print tl-normal">x</div>\n', encoding="utf-8"
+        )
+        run("--update-ratchet")
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0 and "has a rule" in out,
+                "classes defined inside @media are not reported dead",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
+        # dossier: re-mapping contract tokens for a context patina does not
+        # define (paper) is legal WITH a reason, and refused without one.
+        (static / "css" / "tool.css").write_text(
+            "@media print {\n  :root { --bg: #fff; --text: #000; }\n}\n",
+            encoding="utf-8",
+        )
+        (tpl / "p.html").write_text("<div>x</div>\n", encoding="utf-8")
+        run("--update-ratchet")
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode != 0 and "with no reason" in out,
+                "an unexplained at-rule re-map of a contract token is refused",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
+        (static / "css" / "tool.css").write_text(
+            "@media print {\n"
+            "  :root { --bg: #fff; /* patina-allow: paper substrate is not ours to choose */\n"
+            "          --text: #000; /* patina-allow: printers omit backgrounds */ }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        run("--update-ratchet")
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0 and "re-mapped inside at-rules" in out,
+                "an at-rule re-map WITH a stated reason is legal and reported",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
+
+selftest_regression_from_adoptions()
+
+
 def selftest_content_model():
     """The advisory content-model gate must accept BOTH answers -- an updated
     inventory and an explicit attestation that nothing changed -- and must say
