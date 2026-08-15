@@ -38,6 +38,14 @@ bottom edge.
 
 A flex row containing the brand, nav links, spacer, and action buttons.
 
+> **Chrome shares the page grid (2026-08-14, WI-3 prototype review):** the
+> topbar's surface and border run full-width, but its *contents* sit on the
+> same centered max-width container as the page. Chrome pinned to the
+> viewport edge while content is centered creates two competing left edges,
+> and the whole page reads as indented even though it's mathematically
+> centered. Wrap the topbar contents in the same `.<prefix>-wrap` container
+> the page uses.
+
 ```
 .<prefix>-topbar       display: flex; align-items: center; height: 58px;
                         background: var(--panel); border-bottom: 1px solid var(--border)
