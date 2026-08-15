@@ -158,6 +158,19 @@ exception control + quiet `Posture B− →` link → optionally the compact
 expiry horizon if the prototype earns its height → search/pivots → full
 urgency-sorted inventory.
 
+## Prototype result (2026-08-14, same day)
+
+The modified Option A was prototyped at 1366×768 with the new status
+palette: compressed clickable strip, coverage exception control at warning
+prominence ("5 **hosts** unmonitored" — unit explicit, since the strip
+counts certificates; confirmed against `dashboard_stats.py`, which buckets
+certs), quiet `Posture B− →` link, and a ~60px integrated expiry horizon
+(12 mini bars, `+30d` dashed boundary, no panel box). **Fold test passed:**
+the horizon does not push the table head below the fold — an 11-row table
+remains fully visible with the horizon present. The reject condition did
+not trigger; whether the horizon stays is now an aesthetic call from the
+renders, not a spatial one.
+
 ## Questions for the reviewer (as originally posed)
 
 1. **The trend's cost:** an always-visible histogram spends ~120px of
