@@ -736,32 +736,35 @@ def facet_report(decl):
         spec = decl["conformance"].get(name, {})
         state = spec.get("state", "undeclared")
         mark = {
-            "enforced": "OK",
-            "advisory": "~",
-            "attested": "OK",
-            "reviewed": "OK",
-            "deferred": "--",
+            "enforced": "ok ",
+            "advisory": " ~ ",
+            "attested": "ok ",
+            "reviewed": "ok ",
+            "deferred": " - ",
             "not-applicable": "n/a",
-        }.get(state, "?")
-        detail = ""
+        }.get(state, " ? ")
+        if state == "reviewed" and spec.get("_stale"):
+            mark = " ! "
+        lines.append(
+            f"  {mark} {FACETS[name]['label']:<14} {state:<15} "
+            f"[{STATE_MECHANISM.get(state, '?')}]"
+        )
+        # Details go on their own lines, in full. Truncating them mid-word to
+        # fit a column defeats the point: the reason IS the artifact.
         if state == "reviewed":
-            detail = f"through {spec.get('reviewed_through', '?')[:12]}"
-            if spec.get("_stale"):
-                mark, detail = "!", detail + f"; {spec['_stale']}"
-        elif state in ("deferred", "not-applicable"):
-            detail = str(spec.get("why", ""))[:58]
-            if spec.get("until"):
-                detail += f" | until: {str(spec['until'])[:44]}"
+            through = str(spec.get("reviewed_through", "?"))[:12]
+            extra = f" -- {spec['_stale']}" if spec.get("_stale") else ""
+            lines.append(f"        reviewed through {through}{extra}")
+        if spec.get("why"):
+            lines.append(f"        why:   {spec['why']}")
+        if spec.get("until"):
+            lines.append(f"        until: {spec['until']}")
         # A claim is rarely all-or-nothing: cert-watch's content model IS
         # reviewed and has five enumerated open violations. Without somewhere to
         # say so the only honest options were to overclaim or to declare the
         # whole facet deferred, which would erase the review that happened.
         if spec.get("note"):
-            detail = (detail + "  " if detail else "") + f"({str(spec['note'])[:70]})"
-        lines.append(
-            f"  {FACETS[name]['label']:<14} {state:<15} {mark:<4} "
-            f"[{STATE_MECHANISM.get(state, '?')}] {detail}"
-        )
+            lines.append(f"        note:  {spec['note']}")
     return lines
 
 
