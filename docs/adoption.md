@@ -89,13 +89,16 @@ destroys the information that justified separating them.
 
 **patina fixes which states are legal per facet.** A tool cannot declare
 `structure = "enforced"`, because no script decides whether a page expresses an
-operator's mental model. It *can* declare `structure = "attested"` — that was
-added on 2026-08-15 after dossier completed a full archetype audit, came out
-clean, and had nowhere to record it: `reviewed` means a human decided, and the
-facet offered no state an agent-written audit could honestly claim. The same
-argument that put `attested` on `content_model` applies here. Allowing the claim would make machine proof, human
+operator's mental model. Allowing that claim would make machine proof, human
 review and author attestation interchangeable in the output — and the point of
 typing them separately is that they are not.
+
+It *can* declare `structure = "attested"`. That was added on 2026-08-15, after
+dossier completed a full archetype audit, came out clean, and had nowhere to
+record it: `reviewed` means a human decided, and the facet offered no state an
+agent-written audit could honestly claim. The same argument that put `attested`
+on `content_model` applies here, and omitting it from the facet where an agent
+audit is most often the *only* available evidence was simply inconsistent.
 
 Machine-decidability is not importance. "Every `var()` resolves" is trivial to
 automate and comparatively unimportant; "this screen matches how the operator
