@@ -418,6 +418,88 @@ def selftest_upstream_version_semantics():
 selftest_upstream_version_semantics()
 
 
+DECL_BASE = """[patina]
+version = "0.5.0"
+accent = "cert-watch"
+
+[conformance.vendor]
+state = "enforced"
+
+[conformance.contract]
+state = "enforced"
+"""
+
+DECL_NA_MODEL = """
+[conformance.content_model]
+state = "not-applicable"
+why = "read-only analysis tool, no persisted mutable state"
+"""
+
+DECL_OK = DECL_BASE + DECL_NA_MODEL + """
+[conformance.structure]
+state = "deferred"
+why = "no surface briefs written yet"
+until = "the first page rewrite, or a second tool reaching for this shape"
+"""
+
+
+def selftest_declaration():
+    """The declaration is what makes partial adoption legitimate, so its
+    refusals matter as much as the gate's. Every case below is an escape hatch
+    that would otherwise make "all green" cheap and therefore meaningless."""
+    cases = [
+        ("an honest partial declaration passes", DECL_OK, False, ""),
+        (
+            "a facet cannot claim a mechanism that does not exist",
+            DECL_BASE + DECL_NA_MODEL + '\n[conformance.structure]\nstate = "enforced"\n',
+            True,
+            "cannot be 'enforced'",
+        ),
+        (
+            "deferred without a trigger is refused",
+            DECL_BASE + DECL_NA_MODEL
+            + '\n[conformance.structure]\nstate = "deferred"\nwhy = "not worth doing right now"\n',
+            True,
+            "needs a substantive `until`",
+        ),
+        (
+            "not-applicable without a real reason is refused",
+            DECL_BASE
+            + '\n[conformance.content_model]\nstate = "not-applicable"\nwhy = "n/a"\n'
+            + '\n[conformance.structure]\nstate = "not-applicable"\nwhy = "n/a"\n',
+            True,
+            "needs a substantive `why`",
+        ),
+        (
+            "omitting a facet is refused -- silence is what this file removes",
+            DECL_BASE
+            + '\n[conformance.structure]\nstate = "not-applicable"\nwhy = "read-only analysis tool, no editing"\n',
+            True,
+            "no claim made for content_model",
+        ),
+        (
+            "an invented facet is refused",
+            DECL_OK + '\n[conformance.vibes]\nstate = "enforced"\n',
+            True,
+            "unknown conformance facet",
+        ),
+    ]
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        static = build_consumer(tmp)
+        baseline(tmp, static)
+        for name, body, want_fail, expect in cases:
+            decl = tmp / "patina.toml"
+            decl.write_text(body, encoding="utf-8")
+            proc = gate(tmp, static, "--declaration", str(decl))
+            out = proc.stdout + proc.stderr
+            ok = (proc.returncode != 0) == want_fail and (not expect or expect in out)
+            results.append((ok, name, proc.returncode, out.strip().splitlines()))
+
+
+selftest_declaration()
+
+
 failed = [r for r in results if not r[0]]
 for ok, name, code, out in results:
     print(f"{'PASS' if ok else 'FAIL'}  {name}")
