@@ -274,6 +274,33 @@ was **not** "all green". Findings, in order of how much they changed the model:
   vocabulary for. This is the ladder's central defect reproduced in a real
   repo: under L0→L3 gpo-lens could never express this without appearing to
   have *failed* a tier it was never sensibly subject to.
+- **The structure tier is calibrated on monitoring tools.** This is the finding
+  with the longest reach. cert-watch's pages are dashboards, inventories and
+  record details, and all five archetypes describe them — because all five were
+  derived from cert-watch. gpo-lens's core pages are **comparisons and
+  derivations**: a diff view (`baseline_diff`, `golden_diff`, `changelog`), a
+  coverage reconciliation (`admx_coverage`), a per-principal evaluation trace
+  (`resultant`), a lens-switched conflict table (`conflicts`). Their subject is
+  a *relationship between two objects*, not a set of objects, and the archetype
+  vocabulary has no entry for that whole category.
+
+  Checked against the banned list, none of them is a failure mode. The nearest
+  thing to a violation is `.gp-danger-remediation` at `--panel-2` inside a
+  panel, and the second surface distinguishes remediation from findings — a
+  reason beyond containment, which the rule as written permits.
+
+  **This is the first real candidate for the deviation-harvest path**, and it
+  arrives having already met patina's own stated trigger: a shape recurring in
+  more than one place. Do not promote it on that basis alone — two tools can
+  reach for the same wrong shape — but a "comparison" archetype is now the
+  obvious next thing for patina to *earn* from the estate rather than invent.
+- **`--fs-xs` had no answer in the standard.** `token-contract.md:67` gives the
+  type scale as bare numbers with no statement of what each step is *for*, so
+  "is 12px load-bearing here?" could not be answered from the contract; it had
+  to be reasoned from gpo-lens's own internal consistency (its densest chrome
+  already hardcodes 10.5px, so 11px is nowhere near the floor). **Open item:**
+  the scale needs a line per step saying what it is for. A number with no job is
+  a value nobody can defend or overrule.
 - **Exactly one genuine token drift across a whole hand-synced consumer**
   (`--fs-xs`, 12px vs 11px). Of 25 differing values, 8 were the tool's own
   accent (not drift at all) and 16 were the deliberate status-quad change —
