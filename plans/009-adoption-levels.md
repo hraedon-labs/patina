@@ -72,9 +72,12 @@ making a consumer's position on the ladder a committed, visible fact.
 >   CSS, and a surface brief does not require an inventory. The ladder asserted
 >   a dependency chain that does not exist.
 > - **A scalar cannot say "not applicable".** "This tool stopped here" and "this
->   tier does not apply to this tool" are different facts, and the second is the
->   common case — a read-only analysis tool has no content model to inventory
->   and never will. A ladder can only record that as a shortfall.
+>   tier does not apply to this tool" are different facts, and a ladder can only
+>   record the second as a shortfall. (The example first used here — "a
+>   read-only analysis tool has no content model" — was itself falsified by
+>   gpo-lens within the day; see §5. The structural point survives its own bad
+>   example: gpo-lens's *structure* facet is legitimately `deferred` because six
+>   of its pages match no archetype, and a ladder could only call that failure.)
 > - **A number implies a direction.** If L3 exists, L3 is better, whatever the
 >   prose says. The draft had to spend a paragraph disclaiming the semantics of
 >   its own data structure, which is how you know the structure was wrong.
@@ -95,8 +98,8 @@ state = "enforced"
 state = "enforced"
 
 [conformance.content_model]
-state = "attested"
-note  = "no UI-INVENTORY.md yet; concepts and their single controls enumerated"
+state    = "attested"
+evidence = "snapshot: create /ingest, delete /ingest/delete. triage (status + note): one form per row, /findings/{id}/triage. No second control for either."
 
 [conformance.structure]
 state = "deferred"
@@ -127,17 +130,28 @@ condition this file exists to remove.
 **No rollup score, deliberately.** A summary column would be read as
 3/4-is-worse-than-4/4 and we would have reinvented levels with more syntax.
 
-**[D1] — ANSWERED by the facet model, with one part still open.** Permanent
-partial adoption is legitimate and now expressible. What remains is the
-applicability criterion for content model. My first proposal — "more than one
-record type with free-text fields" — was overfit to the incident that exposed
-the problem, the same error Plan 007 made when it banned a layout because one
-coworker's generic prompt reproduced it. The criterion now recorded in
-`content-model.md` is: **persisted mutable domain state exposed through more
-than one reachable editing surface**, or multiple concepts/relationships making
-ownership non-obvious. Reachable editing *surface*, not route — an API endpoint
-no UI calls belongs in the inventory but does not trigger the requirement.
-Confirm or amend that wording.
+**[D1] — RESOLVED 2026-08-15.** Permanent partial adoption is legitimate and
+now expressible. The applicability criterion took two revisions, and the second
+one is the interesting part:
+
+1. *"More than one record type with free-text fields"* — overfit to the
+   incident that exposed the problem, the same error Plan 007 made when it
+   banned a layout because one coworker's generic prompt reproduced it.
+2. *"Persisted mutable domain state exposed through more than one reachable
+   editing surface"* — better, and still wrong. gpo-lens retired it on contact:
+   its triage note has exactly one editing surface and perfectly obvious
+   ownership, and it is *still* persisted operator-authored domain state that
+   the system should be able to account for.
+3. **Final: content-model conformance applies to a tool that persists
+   operator-editable domain state.** `not-applicable` is for genuinely
+   read-only UIs, or state that is only incidental presentation/session
+   preference. The old triggers become **risk multipliers** — how much
+   attention the inventory deserves, not whether one is needed.
+
+The lesson generalises past this rule: each revision moved from *the shape of
+the incident* toward *the property that makes the check worth doing*. A tiny
+tool with one mutable record type needs a ten-line inventory, not an argument
+about whether it qualifies.
 
 ### 2. The archetype set becomes open; the banned modes carry the normative weight
 
