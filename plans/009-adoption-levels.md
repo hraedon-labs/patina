@@ -55,46 +55,89 @@ making a consumer's position on the ladder a committed, visible fact.
 
 ## Direction
 
-### 1. Declared conformance levels
+### 1. Declared conformance facets  — BUILT 2026-08-15, see `docs/adoption.md`
 
-Each consumer commits a `patina.toml` at its repo root:
+> **This section replaced a ladder.** The first draft proposed L0→L1→L2→L3.
+> External review (Sol, 2026-08-15) rejected the ladder and the argument was
+> conclusive, so the ladder is recorded here as a retracted proposal rather
+> than quietly deleted — the reasoning is the useful part.
+>
+> ~~L0 vendored → L1 contract-clean → L2 content-modelled → L3 structured, with
+> `check_patina.py` enforcing exactly the declared level.~~ **RETRACTED.**
+> Three faults, and the plan's own text contained the evidence for all three:
+>
+> - **Only one of the dependencies was real.** The contract check genuinely
+>   cannot evaluate anything until a stamped block defines what the contract
+>   *is*. Nothing else was ordered: an inventory does not require contract-clean
+>   CSS, and a surface brief does not require an inventory. The ladder asserted
+>   a dependency chain that does not exist.
+> - **A scalar cannot say "not applicable".** "This tool stopped here" and "this
+>   tier does not apply to this tool" are different facts, and the second is the
+>   common case — a read-only analysis tool has no content model to inventory
+>   and never will. A ladder can only record that as a shortfall.
+> - **A number implies a direction.** If L3 exists, L3 is better, whatever the
+>   prose says. The draft had to spend a paragraph disclaiming the semantics of
+>   its own data structure, which is how you know the structure was wrong.
+
+Each consumer commits a `patina.toml` at its repo root declaring each facet
+independently, with the mechanism that decides it:
 
 ```toml
 [patina]
-level  = 1            # what this tool currently guarantees
-accent = "gpo-lens"
-prefix = "gp"
-static = "src/gpo_lens/web/static"
+version = "0.5.0"          # the patina release this tool tracks
+accent  = "gpo-lens"
+prefix  = "gp"
+
+[conformance.vendor]
+state = "enforced"
+
+[conformance.contract]
+state = "enforced"
+
+[conformance.content_model]
+state = "attested"
+note  = "no UI-INVENTORY.md yet; concepts and their single controls enumerated"
+
+[conformance.structure]
+state = "deferred"
+why   = "no surface briefs written; these page shapes have no vocabulary yet"
+until = "the first page rewrite, or a second tool reaching for the diff view"
 ```
 
-| Level | Guarantees | Decided by |
-|---|---|---|
-| **L0 vendored** | tokens vendored + stamped; no drift from upstream | script |
-| **L1 contract-clean** | L0 + no contract-token shadowing, every `var()` resolves, prefix rule, colour ratchet | script |
-| **L2 content-modelled** | L1 + `UI-INVENTORY.md` exists and is diffed by any PR touching templates or routes; no concept with two editing controls | script (diff rule) + reviewer (concepts) |
-| **L3 structured** | L2 + every page has a surface brief; no page instantiates a banned failure mode | reviewer |
+States: `enforced` · `advisory` · `attested` · `reviewed` · `deferred` ·
+`not-applicable`. **patina fixes which are legal per facet**, so a tool cannot
+declare `structure = "enforced"` when no script decides it — otherwise machine
+proof, human review and author attestation become interchangeable in the
+output, and typing them separately buys nothing.
 
-`check_patina.py` reads the declaration and enforces **exactly** that level —
-no more, so a consumer at L1 gets a clean, meaningful green rather than a wall
-of failures about surface briefs it never promised; and no less, so the level is
-a real commitment rather than a wish.
+Machine-decidability is not importance. "Every `var()` resolves" is trivial to
+automate and comparatively unimportant; "this screen matches how the operator
+thinks about the job" is the opposite. patina does not weaken a requirement
+because a script cannot judge it — it says honestly which guarantees are
+*mechanically proven* and which are *reviewed*.
 
-The point is the declaration, not the ladder. **A tool may sit at L1
-indefinitely and be in good standing.** What it may not do is be at L1 without
-saying so. Raising a level is a commit, with a diff, at a moment someone chose.
-Lowering one is too — which is the honest way to record "we tried L3 on this
-tool and it wasn't worth it."
+Escape hatches cost something, on the same principle as the colour ratchet's
+`patina-allow`: `deferred` needs an `until` (a trigger, not an excuse —
+"deferred pending a second editing surface" is a decision, "deferred, not worth
+it" is a graveyard), `not-applicable` needs a substantive `why`, `reviewed`
+names the commit it was reviewed through so staleness is computable rather than
+a timeless boolean, and omitting a facet fails outright because silence is the
+condition this file exists to remove.
 
-This also makes the estate's state a one-line query rather than an
-archaeology exercise: today, answering "which tools conform?" took a review pass
-across four repos, and the answer was "cert-watch, and only since yesterday."
+**No rollup score, deliberately.** A summary column would be read as
+3/4-is-worse-than-4/4 and we would have reinvented levels with more syntax.
 
-**[D1]** Is L2 expected of every UI-bearing tool eventually, or is L1 a
-legitimate permanent resting place for a tool whose UI is small (sluice) or
-whose pages are all one archetype? My recommendation: L1 permanent is fine and
-should be said out loud; L2 is expected only where a tool has more than one
-record type with free-text fields — that is the condition that produced the
-notes defect in the first place.
+**[D1] — ANSWERED by the facet model, with one part still open.** Permanent
+partial adoption is legitimate and now expressible. What remains is the
+applicability criterion for content model. My first proposal — "more than one
+record type with free-text fields" — was overfit to the incident that exposed
+the problem, the same error Plan 007 made when it banned a layout because one
+coworker's generic prompt reproduced it. The criterion now recorded in
+`content-model.md` is: **persisted mutable domain state exposed through more
+than one reachable editing surface**, or multiple concepts/relationships making
+ownership non-obvious. Reachable editing *surface*, not route — an API endpoint
+no UI calls belongs in the inventory but does not trigger the requirement.
+Confirm or amend that wording.
 
 ### 2. The archetype set becomes open; the banned modes carry the normative weight
 
@@ -165,9 +208,15 @@ current remote copy nobody reads.
 
 ## Work items
 
-- **WI-1 — Ratify the level model (human).** [D1]. Then `patina.toml` schema +
-  `check_patina.py --level` (it already has every L0/L1 check; the work is
-  reading the declaration and scoping the checks to it).
+- **WI-1 — The declaration.** **DONE 2026-08-15** (as facets, not levels).
+  `patina.toml` schema, `check_patina.py --declaration`, per-facet legal
+  mechanisms, the required `why`/`until`/`reviewed_through` fields, and the
+  facet report. cert-watch declares against it. Version semantics shipped
+  alongside: `VERSION` + `CHANGELOG.md`, where semver answers consumer
+  compatibility (a palette change is *minor* even though it invalidates every
+  baseline) and per-release impact metadata answers what adopting costs
+  (`visual-change`, `baseline-review`, `consumer-code-change`).
+  Still open: [D1]'s applicability wording.
 - **WI-2 — Restructure `archetypes.md`** per §2: banned modes normative,
   archetypes as examples, derivation method to an advisory appendix. [D2]
   (Plan 007's three orphaned bans were carried in on 2026-08-15 by the
@@ -177,17 +226,59 @@ current remote copy nobody reads.
 - **WI-3 — Deviation protocol** in `content-model.md` rule 5 + `archetypes.md`;
   delete the impossible same-PR amendment rule.
 - **WI-4 — `sync.sh --docs`** + stamped docs block + `patina.toml`. [D3]
-- **WI-5 — The inventory-diff check.** `content-model.md` rule 4 currently says
-  it is "enforced in review, not code", but it is the most mechanical rule in
-  the whole content-model tier: a PR that touches `templates/` or `routes/`
-  without touching `UI-INVENTORY.md` is a one-line CI check against the diff.
-  It is also the rule aimed squarely at the defect class that motivated the
-  tier. **[D4]** — this reverses a stated decision, so it needs one: make it
-  code (advisory first, then blocking), or leave it to review?
-  My recommendation: ship it advisory now, blocking at L2.
+- **WI-5 — The content-model change gate.** **DONE 2026-08-15, advisory.**
+  `scripts/check_content_model.py`. **[D4] resolved as advisory, and the
+  blocking half is now explicitly deferred, not merely postponed.** The naive
+  rule (templates changed ⇒ inventory must change) is only approximately
+  correlated with the content model; as a *blocking* gate it would teach one
+  behaviour — edit `UI-INVENTORY.md` until CI is green — and turn a review
+  artifact into ceremony, because the correct inventory diff is frequently zero
+  bytes. So the gate accepts either an inventory diff or a
+  `Content-Model: reviewed-unchanged` commit trailer, and reports which. A
+  trailer beats a file touch not because it is costly (no attestation can be)
+  but because it cannot be mistaken for substantive work.
+  Family rule now in `content-model.md`: **never make meaningless file
+  modification the cheapest way to satisfy a semantic gate.**
+  Still unbuilt: the duplicate-control detector — the half that would have
+  caught the notes defect directly.
 - **WI-6 — Estate status.** `patina status` walks the consumer repos, reads each
-  `patina.toml`, runs the gate at its declared level, and prints the ladder.
-  Cheap, and it is the artifact that makes levels real rather than decorative.
+  `patina.toml`, runs the gate as declared, and prints the matrix. Do this
+  **after** gpo-lens, so it is shaped by two real declarations rather than one.
+  No rollup column.
+
+### 5. What gpo-lens actually taught (2026-08-15)
+
+The facet model was deliberately taken to a second consumer *while* it was
+still being designed, because plans 004–008 accumulated their contradictions
+precisely by not doing that. gpo-lens was chosen because its expected result
+was **not** "all green". Findings, in order of how much they changed the model:
+
+- **The doc's own worked example was wrong about the tool it named.**
+  `adoption.md` used gpo-lens as the case for `content_model =
+  "not-applicable"` — "read-only analysis; no persisted mutable domain state".
+  Enumerating the write paths showed gpo-lens is read-only towards *Active
+  Directory*, not towards *its own store*: it persists finding triage state
+  including a 2000-character operator note, plus snapshot lifecycle. The
+  criterion turns on persisted mutable domain state a user can edit, not on
+  where the input comes from. Corrected in `adoption.md`; **"it's a reporting
+  tool" is an intuition, not evidence.**
+- **`attested` earned its place immediately.** gpo-lens has no
+  `UI-INVENTORY.md` and no human has reviewed its content model, but its
+  concepts and controls were enumerated concretely. `reviewed` would have
+  overclaimed, `deferred` would have erased real work, `not-applicable` was
+  false. The state that fit is the author-claim one.
+- **`structure = deferred` is the honest answer and the reason the facet cannot
+  be `enforced` anywhere.** Six gpo-lens pages (resultant, baseline_diff,
+  golden_diff, conflicts, admx_coverage, briefing) match none of the five
+  archetypes. They are not failure modes; they are shapes patina has no
+  vocabulary for. This is the ladder's central defect reproduced in a real
+  repo: under L0→L3 gpo-lens could never express this without appearing to
+  have *failed* a tier it was never sensibly subject to.
+- **Exactly one genuine token drift across a whole hand-synced consumer**
+  (`--fs-xs`, 12px vs 11px). Of 25 differing values, 8 were the tool's own
+  accent (not drift at all) and 16 were the deliberate status-quad change —
+  i.e. the release-impact metadata (`visual-change: yes, baseline-review:
+  required, consumer-code-change: no`) described this upgrade exactly.
 
 ## Acceptance
 

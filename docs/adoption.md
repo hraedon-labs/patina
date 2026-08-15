@@ -23,14 +23,25 @@ state = "enforced"
 state = "enforced"
 
 [conformance.content_model]
-state = "not-applicable"
-why   = "read-only analysis; no persisted mutable domain state"
+state = "attested"
+note  = "no UI-INVENTORY.md yet; concepts and their single controls enumerated below"
 
 [conformance.structure]
 state = "deferred"
 why   = "no surface briefs written; these page shapes have no vocabulary yet"
 until = "the first page rewrite, or a second tool reaching for the diff view"
 ```
+
+> **"Read-only tool" is a claim about the wrong thing.** This example first
+> declared gpo-lens's content model `not-applicable` on the grounds that it is a
+> read-only analysis tool. Adopting patina in gpo-lens on 2026-08-15 showed that
+> was false: gpo-lens is read-only towards *Active Directory*, not towards *its
+> own store*. It persists finding triage state — including a 2000-character
+> operator note, which is the precise concept class that motivated this facet —
+> and snapshot lifecycle. The facet turns on whether the tool persists mutable
+> domain state a user can edit, not on where its input comes from. Enumerate the
+> write paths before claiming `not-applicable`; "it's a reporting tool" is an
+> intuition, not evidence.
 
 ## Why facets and not levels
 
