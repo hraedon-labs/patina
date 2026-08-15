@@ -752,6 +752,12 @@ def facet_report(decl):
             detail = str(spec.get("why", ""))[:58]
             if spec.get("until"):
                 detail += f" | until: {str(spec['until'])[:44]}"
+        # A claim is rarely all-or-nothing: cert-watch's content model IS
+        # reviewed and has five enumerated open violations. Without somewhere to
+        # say so the only honest options were to overclaim or to declare the
+        # whole facet deferred, which would erase the review that happened.
+        if spec.get("note"):
+            detail = (detail + "  " if detail else "") + f"({str(spec['note'])[:70]})"
         lines.append(
             f"  {FACETS[name]['label']:<14} {state:<15} {mark:<4} "
             f"[{STATE_MECHANISM.get(state, '?')}] {detail}"
