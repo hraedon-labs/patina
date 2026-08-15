@@ -63,9 +63,9 @@ self-verifies its own vendored bytes. `check_contrast.py` fails closed on any
 value it cannot score.
 
 **patina runs its own gates.** `design-gates.yml` runs the contrast gate, a
-17-case self-test of the gate's refusals, and a vendor-then-check round trip.
-Previously neither script ran anywhere while the docs claimed both were
-enforced in CI.
+self-test that replays every known bypass and fails if any stops being
+refused, and a vendor-then-check round trip. Previously neither script ran
+anywhere while the docs claimed both were enforced in CI.
 
 **Adoption declaration (`patina.toml`).** Consumers declare which conformance
 facets they claim and by what mechanism. Consumer-owned: `sync.sh` never
