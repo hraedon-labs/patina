@@ -450,7 +450,9 @@ def collect_defined_classes(sources):
     return defined
 
 
-def check_undefined_classes(gate: Gate, static_dir, extra_dirs, sources, prefix, baseline):
+def check_undefined_classes(
+    gate: Gate, static_dir, extra_dirs, sources, prefix, baseline, update=False
+):
     """A class named in a template with no rule anywhere renders as an unstyled
     div, and nothing else in this gate notices: token conformance stays green on
     a page whose primary component has no CSS at all.
@@ -478,7 +480,12 @@ def check_undefined_classes(gate: Gate, static_dir, extra_dirs, sources, prefix,
         for fp, v in found.items()
         if fp not in baseline
     ]
-    if new:
+    # On a baseline run the whole point is to record what exists; failing here
+    # would make --update-ratchet unusable on any consumer that has a backlog,
+    # which is every consumer.
+    if update:
+        gate.note(f"{len(found)} undefined class(es) recorded in the baseline")
+    elif new:
         gate.fail(
             f"{len(new)} class(es) used in markup with no rule in any tool CSS "
             "-- these render unstyled:\n         " + "\n         ".join(sorted(new)[:8])
@@ -977,7 +984,8 @@ def main():
         except (json.JSONDecodeError, OSError, TypeError):
             class_baseline = set()
     classes = check_undefined_classes(
-        gate, static_dir, args.extra, sources, args.prefix, class_baseline
+        gate, static_dir, args.extra, sources, args.prefix, class_baseline,
+        args.update_ratchet,
     )
     check_ratchet(gate, sources, ratchet_file, args.update_ratchet, classes)
 
