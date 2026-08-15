@@ -1,0 +1,42 @@
+name: design-gates
+on: [push, pull_request]
+
+# patina publishes the token contract but, until 2026-08-15, ran none of its own
+# gates: check_contrast.py and check_patina.py were scripts nobody invoked, while
+# docs claimed both were enforced in CI. The enforcement topology was inverted —
+# consumers checked, the publisher didn't — so a careless edit to a status colour
+# reached every vendored copy unchecked.
+jobs:
+  design-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Contrast floors (WCAG 2.2, both themes, every accent)
+        run: python3 scripts/check_contrast.py
+
+      # The gate's refusals are the product. This replays every bypass found in
+      # the 2026-08-15 audit and fails if any of them stops being refused.
+      - name: Conformance-gate self-test
+        run: python3 scripts/selftest_patina.py
+
+      # patina must satisfy its own contract: vendoring into a scratch consumer
+      # and checking it proves sync.sh and the checker agree on the format.
+      - name: Vendor into a scratch consumer and check it
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d)"
+          mkdir -p "$work/static/css"
+          printf '.x { color: var(--text); }\n' > "$work/static/css/tool.css"
+          ./sync.sh --no-theme cert-watch "$work/static" "$work"
+          python3 "$work/patina-check.py" "$work/static" \
+            --prefix tl --no-theme \
+            --ratchet-file "$work/ratchet.json" --update-ratchet
+          python3 "$work/patina-check.py" "$work/static" \
+            --prefix tl --no-theme \
+            --ratchet-file "$work/ratchet.json" \
+            --upstream .
