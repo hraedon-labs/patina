@@ -32,11 +32,11 @@ jobs:
           work="$(mktemp -d)"
           mkdir -p "$work/static/css"
           printf '.x { color: var(--text); }\n' > "$work/static/css/tool.css"
-          ./sync.sh --no-theme cert-watch "$work/static" "$work"
+          ./sync.sh --no-theme --docs "$work/docs" cert-watch "$work/static" "$work"
           python3 "$work/patina-check.py" "$work/static" \
-            --prefix tl --no-theme \
+            --prefix tl --no-theme --docs "$work/docs" \
             --ratchet-file "$work/ratchet.json" --update-ratchet
           python3 "$work/patina-check.py" "$work/static" \
-            --prefix tl --no-theme \
+            --prefix tl --no-theme --docs "$work/docs" \
             --ratchet-file "$work/ratchet.json" \
             --upstream .
