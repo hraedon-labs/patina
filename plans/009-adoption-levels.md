@@ -225,7 +225,13 @@ current remote copy nobody reads.
   What remains is demoting the archetype *taxonomy* and the derivation method.)
 - **WI-3 — Deviation protocol** in `content-model.md` rule 5 + `archetypes.md`;
   delete the impossible same-PR amendment rule.
-- **WI-4 — `sync.sh --docs`** + stamped docs block + `patina.toml`. [D3]
+- **WI-4 — `sync.sh --docs`.** **DONE 2026-08-15.** Vendors patina's docs with
+  a provenance banner, a manifest of source hashes, and `OWNERSHIP.md`;
+  `check_patina.py --docs` verifies against the manifest and, with
+  `--upstream`, against patina at the stamped revision. Same version semantics
+  as the token block. [D3] resolved: vendor, don't point. Kept deliberately
+  boring — no `patina status`, no path inference, no generated indexes.
+  cert-watch and gpo-lens both carry the docs and both exclude them from ruff.
 - **WI-5 — The content-model change gate.** **DONE 2026-08-15, advisory.**
   `scripts/check_content_model.py`. **[D4] resolved as advisory, and the
   blocking half is now explicitly deferred, not merely postponed.** The naive
