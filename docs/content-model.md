@@ -63,21 +63,51 @@ touch this, because its rules never named *concepts*. These rules do.
 
 ## Enforcement
 
-**Today: none of this is enforced by code.** Every rule above is review-time
-prose. That is worth stating plainly in a document whose own premise is that
-prose enforcement fails.
+Rule 4 has a script. The rest is review-time prose, which is worth stating
+plainly in a document whose own premise is that prose enforcement fails.
 
-- **Planned, not built — `scripts/check_content_model.py` (advisory).** Plan 008
-  WI-4 specifies a stdlib-only heuristic detector that will flag ≥2 same-type
-  free-text controls bound to one record container in a rendered page, and
-  duplicate visible labels within a container. Advisory by design, because IA
-  judgments need a human — the check's job is to force the conversation the
-  notes fields never got. **The script does not exist yet** in patina or in any
-  consumer; nothing runs it in any CI.
-- **Enforced in review, not code — the inventory-diff rule (rule 4).** A PR
-  touching templates/routes that doesn't touch `UI-INVENTORY.md` gets asked
-  why. cert-watch's `UI-INVENTORY.md` exists (Plan 008 WI-2); no other repo has
-  one yet.
+- **Built, advisory — `scripts/check_content_model.py` (rule 4).** Given a diff
+  range, it finds UI-affecting files and asks for one of two answers: an
+  updated `UI-INVENTORY.md`, or a commit trailer `Content-Model:
+  reviewed-unchanged`. It reports which one it got, and exits 0 unless
+  `--blocking` is passed.
+
+  **Both answers are real.** A blocking "templates changed ⇒ inventory must
+  change" rule is mechanical and only approximately correlated with the thing
+  we care about: most template edits do not touch the content model, so the
+  cheapest route to green becomes *edit `UI-INVENTORY.md` somehow*, and a
+  review artifact turns into ceremonial churn. The correct inventory diff is
+  frequently zero bytes. Attestation cannot be made expensive — an agent can
+  produce any ceremony we invent — but it can be made **legible**: a trailer
+  is better than a file touch precisely because nobody can mistake it for
+  substantive work, and it hands a reviewer a discrete claim to challenge.
+
+  Family rule, learned the hard way from patina's own colour ratchet (which
+  made *swapping* a violation cheaper than *removing* one): **never make
+  meaningless file modification the cheapest way to satisfy a semantic gate.**
+
+  It stays advisory until there is either a detector precise enough not to
+  reward fake edits, or enough data from advisory runs to justify blocking.
+  Consumers declaring `content_model = "attested"` (see `adoption.md`) are
+  using the trailer path deliberately.
+- **Not built — the duplicate-control detector.** Plan 008 WI-4 also specifies
+  a heuristic that flags ≥2 same-type free-text controls bound to one record
+  container in a rendered page, and duplicate visible labels within a
+  container. **That part does not exist.** It is the half that would have
+  caught the notes defect directly.
+- **Applicability.** Content-model review earns its keep when persisted mutable
+  domain state is exposed through **more than one reachable editing surface**,
+  or when multiple concepts or record relationships make ownership of that
+  state non-obvious. Reachable editing surface, not route: an API endpoint that
+  no UI calls belongs in the inventory as part of the state model, but its
+  existence alone does not trigger the requirement. Thin, read-only or
+  single-surface tools declare the facet `not-applicable` with a reason.
+
+  The defect class is **ambiguous ownership of mutable domain state** — not
+  "several free-text fields". You get the same pathology with dropdowns,
+  toggles, dates, tags or ownership fields; `hosts.notes` reaching five write
+  paths across two control types is the shape of the bug, and text was
+  incidental to it.
 - **Normative for new work, with no artifacts yet — surface briefs (rule 5).**
   No `ui/surfaces/<route>.md` exists in any family repo. The rule binds pages
   written from here on; it does not describe an existing corpus, so "read the

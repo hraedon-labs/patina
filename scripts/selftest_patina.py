@@ -500,6 +500,91 @@ def selftest_declaration():
 selftest_declaration()
 
 
+def selftest_content_model():
+    """The advisory content-model gate must accept BOTH answers -- an updated
+    inventory and an explicit attestation that nothing changed -- and must say
+    which one it got. If only the file edit satisfies it, the cheapest way to
+    green is to touch the file, and the artifact stops meaning anything."""
+    with tempfile.TemporaryDirectory() as td:
+        repo = Path(td) / "consumer"
+        (repo / "templates").mkdir(parents=True)
+        (repo / "UI-INVENTORY.md").write_text("# inventory\n", encoding="utf-8")
+        (repo / "templates" / "page.html").write_text("<p>a</p>\n", encoding="utf-8")
+        _git(repo, "init", "-q")
+        _commit(repo, "base")
+        base = (_git(repo, "rev-parse", "HEAD").stdout or "").strip()
+
+        script = str(ROOT / "scripts" / "check_content_model.py")
+
+        def run(*extra):
+            return subprocess.run(
+                [PY, script, "--repo", str(repo), "--base", base, *extra],
+                capture_output=True,
+                text=True,
+            )
+
+        # 1. UI change, nothing recorded, nothing attested.
+        (repo / "templates" / "page.html").write_text("<p>b</p>\n", encoding="utf-8")
+        _commit(repo, "tweak the page")
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0 and "UI-affecting file(s) changed" in out,
+                "content model: an unrecorded UI change is reported (advisory, exit 0)",
+                proc.returncode,
+                out.strip().splitlines()[:4],
+            )
+        )
+        proc = run("--blocking")
+        results.append(
+            (
+                proc.returncode == 1,
+                "content model: --blocking turns the same finding into a failure",
+                proc.returncode,
+                [],
+            )
+        )
+
+        # 2. The same change, attested as reviewed-unchanged.
+        (repo / "templates" / "page.html").write_text("<p>c</p>\n", encoding="utf-8")
+        _git(repo, "add", "-A")
+        _git(
+            repo,
+            "-c", "user.email=selftest@example.invalid",
+            "-c", "user.name=selftest",
+            "commit", "-qm",
+            "tweak again\n\nContent-Model: reviewed-unchanged",
+        )
+        proc = run("--blocking")
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0 and "attested unchanged" in out,
+                "content model: a trailer attestation satisfies it, and says so",
+                proc.returncode,
+                out.strip().splitlines()[:3],
+            )
+        )
+
+        # 3. An actual inventory diff, reported distinctly from an attestation.
+        (repo / "UI-INVENTORY.md").write_text("# inventory\n\n- notes\n", encoding="utf-8")
+        _commit(repo, "record the new concept")
+        proc = run("--blocking")
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0 and "inventory updated" in out,
+                "content model: an inventory diff is reported distinctly from an attestation",
+                proc.returncode,
+                out.strip().splitlines()[:3],
+            )
+        )
+
+
+selftest_content_model()
+
+
 failed = [r for r in results if not r[0]]
 for ok, name, code, out in results:
     print(f"{'PASS' if ok else 'FAIL'}  {name}")
