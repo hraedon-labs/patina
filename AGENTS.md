@@ -6,10 +6,23 @@ sync script) for the tool family. Read `README.md` for the what/why and
 
 ## What patina is (and isn't)
 
-- It is a **token contract + assets**, not a Python project. There is no
-  `pyproject.toml`, no package, no build step — by design. Don't add one to
-  "match the other projects"; the family's deterministic-core/collector
-  conventions are for data tools, and most do not apply here.
+- It is a **token contract + shared assets + the conformance gate**, not a
+  *packaged* Python project. It does ship Python — `scripts/check_patina.py`,
+  `scripts/check_contrast.py`, and the family plumbing checks — but they are
+  stdlib-only scripts run directly (and vendored into consumers by `sync.sh`),
+  not a library. There is still no `pyproject.toml`, no package, no build step,
+  by design. Don't add one to "match the other projects"; the family's
+  deterministic-core/collector conventions are for data tools, and most do not
+  apply here.
+- **It is not *only* tokens any more (amended 2026-08-14, Plan 006, ratified by
+  the owner).** patina will also ship a reference component implementation —
+  `components.css` (neutral `pt-` prefix) + `macros/ui.j2` — that new tools
+  vendor wholesale; existing tools keep their prefixes and adopt
+  opportunistically. This reverses the old "intentionally not a component
+  framework" charter line: prose describing shapes is a re-implementation task
+  for every agent that reads it, and four parallel component layers were the
+  measured result. **Ratified, not built** — Plan 006 WI-2/3/4 are open, so
+  neither file exists yet; `docs/patterns.md` is still the whole delivery.
 - It is consumed **vendored** (copied via `sync.sh`), not installed as a
   dependency. The chosen tradeoff: zero coupling and no install-time wiring, at
   the cost of re-running `sync.sh` to propagate changes.

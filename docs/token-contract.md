@@ -34,17 +34,33 @@ border). Links, focus rings, wordmark, active nav. **Never** status.
 `#7fd091` / antique gold `#ce9d44` / terracotta `#cc6050` / steel `#60aeda`;
 light: deep inks `#004e19` / `#836101` / `#b64461` / `#25729e`. Chosen from
 three constraint-searched candidates rendered on real components (owner +
-review concurred). Every value ≥4.5:1 on `--bg` and `--panel` in both themes;
-all 6 status pairs ≥8 ΔE under protanopia/deuteranopia/tritanopia simulation
-(Machado 2009, severity 1.0), normal-vision ≥15. The previous quad — which
-happened to be Tailwind emerald/amber/red-400 — was replaced for its measured
-failures (light ok 2.90:1; deutan collapse of ok/warn/crit at ΔE 4.1–5.5),
-NOT for its provenance. Two hue choices are physics, not taste: light-theme
-warn is golden ochre (sRGB has no dark high-chroma amber at 4.5:1 on warm
-paper) and light-theme crit runs crimson (warm-red vs amber is not
-protan-separable at this contrast). `scripts/check_contrast.py` gates the
-floors in CI; changing these values again requires plan-004-grade CVD
-validation, not just the gate.
+review concurred). Every value ≥4.5:1 on `--bg` and `--panel` in both themes.
+
+*Recorded one-time manual measurement (2026-08-14, NOT a gated invariant):* all
+6 status pairs measured ≥8 ΔE under protanopia/deuteranopia/tritanopia
+simulation (Machado 2009, severity 1.0), normal-vision ≥15. **No script in this
+repo or any consumer computes those figures** — `check_contrast.py` gates the
+WCAG contrast floors only, and its own docstring says CVD pairwise validation is
+deliberately not gated there because it needs simulation matrices and judgment.
+**Open item:** Plan 004's acceptance criterion asked for the validator + CVD
+simulation pass to be recorded in the plan folder, and it never was —
+`git ls-files plans/` shows only `.md` files, so the underlying measurement data
+is uncommitted and these numbers are currently unreproducible from this repo.
+Re-deriving or committing that record is unassigned; see `plans/004`.
+
+The same caveat applies to the figures for the *previous* quad below: they are
+recorded measurements, not gated ones.
+
+The previous quad — which happened to be Tailwind emerald/amber/red-400 — was
+replaced for its measured failures (light ok 2.90:1; deutan collapse of
+ok/warn/crit at ΔE 4.1–5.5), NOT for its provenance. Two hue choices are
+physics, not taste: light-theme warn is golden ochre (sRGB has no dark
+high-chroma amber at 4.5:1 on warm paper) and light-theme crit runs crimson
+(warm-red vs amber is not protan-separable at this contrast).
+`scripts/check_contrast.py` gates the WCAG contrast floors in CI — that is the
+mechanical half. The CVD half is not mechanical: changing these values again
+requires redoing the plan-004-grade CVD validation by hand, and the gate will
+not tell you that you skipped it.
 
 ### Type
 Faces: `--font-sans` (system UI), `--font-mono` (IBM Plex Mono — figures,
@@ -86,17 +102,41 @@ unprefixed token in tool CSS is a conformance failure — `check_patina.py`
 enforces both directions). If a local token turns out to be generally useful,
 promote it into this contract; don't drop the prefix locally.
 
-## Shared component patterns
+## Shared component patterns (Plan 006, ratified 2026-08-14 — a reversal)
 
-Each tool keeps its own component CSS with its own class prefix (cert-watch
-`cw-`, gpo-lens `gp-`). Tokens are shared; component classes are not. A future
-step could extract the genuinely common components into a neutral-prefixed
-`components.css` that patina also vendors — that decision is deferred to
-`plans/001`.
+**Decided 2026-08-14 by the owner, reversing "share tokens and shapes, not
+class names":** patina ships a **reference implementation** of the shared
+components — `components.css` (neutral `pt-` prefix) plus a Jinja macro library
+`macros/ui.j2` — vendored by `sync.sh` (delimited and stamped per Plan 005)
+alongside the tokens.
 
-In the meantime, **`patterns.md`** catalogs the shared component shapes
-(topbar, stat strip, table, pill, chip, callout, panel, empty state, etc.)
-with canonical structure, token usage, and naming conventions. New tools should
-follow those patterns so the family stays visually coherent even without a
-shared stylesheet. The rule stands: **share tokens and shapes, not class
-names.**
+- **New tools adopt it wholesale.** A new tool stands up the family frame with
+  zero component CSS of its own.
+- **Existing tools keep their prefixes** (cert-watch `cw-`, gpo-lens `gp-`,
+  dossier `ds-`) and may adopt per-component opportunistically — when a page is
+  being rebuilt anyway. Owner amendment, same day: a full retrofit is
+  *permitted* where the initial pain is worth the downstream simplification,
+  but opportunistic remains the default; assess per tool when its UI is next
+  touched.
+
+**Why the reversal.** The old rule was reasoned for *human* autonomy: each
+tool's author keeps freedom at the component layer. But the estate's UIs are
+written by agents, not authors, and for an agent `patterns.md` is a description
+to re-implement from scratch per tool. Measured 2026-08-14: four parallel
+component layers (`cw-` ~40 sections, `ds-` ~830 lines, gpo-lens's own,
+sluice's per-page CSS) implementing the same 14 shapes with drifting details.
+Every re-implementation is a drift surface. The catalog was the right idea with
+the wrong delivery — prose for humans instead of code for machines. What made
+the reversal *safe* is Plan 005: shared code is only safe to share once drift
+in a vendored copy fails mechanically.
+
+**Status: ratified, not built.** Neither `components.css` nor `macros/ui.j2`
+exists yet — Plan 006 WI-2 (extract), WI-3 (prove on a thin consumer), WI-4
+(document) are open. Do not write code that assumes a `pt-` class exists.
+
+Until they ship — and after, as the human-readable half — **`patterns.md`**
+catalogs the shared component shapes (topbar, stat strip, table, pill, chip,
+callout, panel, empty state, etc.) with canonical structure, token usage, and
+naming conventions, and **`archetypes.md`** covers whole-page structure. New
+tools follow those so the family stays visually coherent even without the
+shared stylesheet.

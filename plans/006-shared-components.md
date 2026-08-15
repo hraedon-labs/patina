@@ -5,7 +5,13 @@ reference implementation; new tools vendor it. Amendment to the original
 proposal, also from the owner: existing tools MAY be retrofitted when the
 initial pain is worth the downstream simplification — retrofit is permitted,
 opportunistic remains the default; assess per-tool when its UI is next
-touched. WI-2..4 (extraction, agent-notes proof, docs) not yet built.
+touched. **WI-1's deliverable actually landed 2026-08-15** — it had been marked
+done on the strength of the decision alone, while four documents still stated
+the reversed position. The decision and its rationale are now recorded in
+`README.md` (Scope), `AGENTS.md` ("What patina is (and isn't)"),
+`docs/token-contract.md` ("Shared component patterns") and `docs/patterns.md`
+(intro); each of those also states plainly that the components are **not
+built**. WI-2..4 (extraction, agent-notes proof, docs) not yet built.
 **Owner:** patina. Depends on Plan 005 (the gate is what makes shared code
 safe to share).
 
@@ -47,16 +53,18 @@ Hybrid, weighted by cost:
 
 ## Work items
 
-- **WI-1 — Ratify the reversal (human).** The charter says "intentionally not
-  a component framework"; this plan amends that to "a reference implementation
-  new tools vendor". One-line decision, recorded in README scope + charter.
-- **WI-2 — Extract.** Build `components.css` + `macros/ui.j2` from cert-watch's
+- **WI-1 — DONE** (decided 2026-08-14; recorded in the docs 2026-08-15).
+  Ratify the reversal (human). The charter said "intentionally not a component
+  framework"; this plan amends that to "a reference implementation new tools
+  vendor". Recorded in README scope, AGENTS.md, `docs/token-contract.md`, and
+  `docs/patterns.md`.
+- **WI-2 — OPEN — Extract.** Build `components.css` + `macros/ui.j2` from cert-watch's
   macros and `patterns.md`; every shape gets its state set; ASCII-only (family
   IIS rule).
-- **WI-3 — Prove on a thin consumer.** agent-notes is the cheapest live
+- **WI-3 — OPEN — Prove on a thin consumer.** agent-notes is the cheapest live
   candidate (8 templates, currently unstyled): adopt tokens + components
   wholesale; it becomes the reference example of "new tool, zero own CSS".
-- **WI-4 — Document.** `patterns.md` sections point at their `pt-` counterparts;
+- **WI-4 — OPEN — Document.** `patterns.md` sections point at their `pt-` counterparts;
   add "when to extend vs. when to request" — a tool needing a new shape adds it
   to patina (with states) or prefixes it as tool-local; never per-page CSS.
   (This kills the cert-watch `NEEDED-CSS.md` wishlist pattern by giving the
@@ -64,10 +72,13 @@ Hybrid, weighted by cost:
 
 ## Acceptance
 
-- agent-notes runs the family look with no component CSS of its own.
-- The state-set rule is checkable: every `pt-` component section documents its
-  states inline; the empty state exists for every collection-rendering shape.
-- Charter + token-contract updated with the decision and its rationale.
+- **NOT MET (WI-3)** — agent-notes runs the family look with no component CSS
+  of its own.
+- **NOT MET (WI-2)** — the state-set rule is checkable: every `pt-` component
+  section documents its states inline; the empty state exists for every
+  collection-rendering shape.
+- **MET 2026-08-15 (WI-1)** — charter + token-contract updated with the
+  decision and its rationale.
 
 ## If declined
 

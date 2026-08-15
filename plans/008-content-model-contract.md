@@ -1,7 +1,14 @@
 # Plan 008 — content-model contract + the patina skill (the missing layer)
 
-**Status:** Draft — proposed 2026-08-14. **Owner:** patina; pilot in
-cert-watch. This is the layer no external tool provides — Hallmark's unit of
+**Status:** partially executed, record corrected 2026-08-15. **WI-1**
+(`docs/content-model.md`) and **WI-2** (cert-watch `UI-INVENTORY.md`) are
+**done**. **WI-3** (the notes adjudication) was **DECIDED by the owner
+2026-08-14** — the cert-watch implementation is queued, not built. **WI-4**
+(detector), **WI-5** (skill) and **WI-6** (surface briefs) are **open** — which
+means `scripts/check_content_model.py`, `skills/patina-ui/`, and every
+`ui/surfaces/<route>.md` do not exist anywhere in the estate yet, and
+`docs/content-model.md` says so in its Enforcement section. **Owner:** patina;
+pilot in cert-watch. This is the layer no external tool provides — Hallmark's unit of
 analysis is the page's visual system, Impeccable's is the element; neither
 sees information architecture. It is also the layer where the estate's actual
 cited failure lives.
@@ -72,10 +79,10 @@ binary choices; never open-ended taste questions.**
 
 ## Work items
 
-- **WI-1 — Write `docs/content-model.md`** (the five rules, with the
+- **WI-1 — DONE.** Write `docs/content-model.md` (the five rules, with the
   cert-watch notes case as the worked example — rules without their motivating
   failure get optimized away).
-- **WI-2 — cert-watch pilot: `UI-INVENTORY.md`.** The 2026-08-14 survey data
+- **WI-2 — DONE.** cert-watch pilot: `UI-INVENTORY.md`. The 2026-08-14 survey data
   is essentially the draft (7 fields, endpoints, surfaces already enumerated).
   Include the latent 8th field (`hosts.expected_issuers`, surfaced nowhere).
 - **WI-3 — The notes adjudication (human).** ~~Present both options as
@@ -89,17 +96,20 @@ binary choices; never open-ended taste questions.**
   regardless, and the host/cert scope distinction proved invisible at 1:1.
   Implementation is a cert-watch change (migration + template + endpoint
   removal) — queued, not yet built. Recorded in cert-watch UI-INVENTORY.md.
-- **WI-4 — Detector.** Build + run advisory in cert-watch CI against rendered
-  pages; tune until it flags the (pre-fix) notes case and nothing spurious.
-- **WI-5 — Author + install the skill.** Trigger on UI-bearing family repos;
-  verify it actually loads in a fresh session touching cert-watch templates.
-- **WI-6 — Surface briefs for cert-watch's four domains** (Certificates,
+- **WI-4 — OPEN — Detector.** Build + run advisory in cert-watch CI against
+  rendered pages; tune until it flags the (pre-fix) notes case and nothing
+  spurious. Not started: `scripts/check_content_model.py` does not exist.
+- **WI-5 — OPEN — Author + install the skill.** Trigger on UI-bearing family
+  repos; verify it actually loads in a fresh session touching cert-watch
+  templates. Not started: `skills/patina-ui/` does not exist.
+- **WI-6 — OPEN — Surface briefs for cert-watch's four domains** (Certificates,
   Posture, Activity, Settings) as the worked example other repos copy.
 
 ## Acceptance
 
-- cert-watch has an inventory, four surface briefs, and a recorded notes
-  decision; the detector runs advisory in its CI.
+- cert-watch has an inventory (**met**), four surface briefs (**not met** —
+  WI-6), and a recorded notes decision (**met** — WI-3, decided; implementation
+  queued); the detector runs advisory in its CI (**not met** — WI-4).
 - The skill demonstrably fires on UI work and carries all four layers' rules.
 - A test PR adding a duplicate concept control gets caught (by detector or by
   inventory-diff review) — the class of defect that survived Plan 055 can no

@@ -6,9 +6,22 @@ catalog goes one step further: it shows the **shapes** that tools reuse — the
 topbar, stat strip, table, pill, and so on — so a new tool can build the same
 instrument-panel feel without reverse-engineering an existing one.
 
-Each tool owns its own component CSS with its own prefix (`cw-`, `gp-`, etc.).
-patina does not ship component classes. The patterns below describe **what to
-build and how to name it**, not a shared stylesheet.
+Today each tool owns its own component CSS with its own prefix (`cw-`, `gp-`,
+etc.), and the patterns below describe **what to build and how to name it**, not
+a shared stylesheet. That is no longer the end state: **Plan 006 (ratified
+2026-08-14) decided patina will ship a reference implementation** —
+`components.css` (neutral `pt-` prefix) + `macros/ui.j2` — that new tools vendor
+wholesale, while existing tools keep their prefixes and adopt opportunistically.
+**Neither file is built yet** (Plan 006 WI-2/3/4 open), so this catalog is still
+the whole delivery; when they land, each section gains a pointer to its `pt-`
+counterpart (WI-4).
+
+**Tiers.** `archetypes.md` sorts these sections into two tiers with different
+rules: §§1–2 (the frame) and §§3–5, 7–14 (the invisible shapes) are Tier 1 —
+standardize aggressively. §6 (stat strip) is Tier 2 — it is a page-archetype
+element with a deliberate grammar and a banned failure mode. Whole-page layout
+rules live in `archetypes.md`, not here; where one constrains a component's
+shape, the section below carries the implementation and points back.
 
 ## Naming convention
 
@@ -26,10 +39,15 @@ A full-viewport flex column: fixed topbar at the top, scrollable content below.
 
 ```
 .<prefix>-app          flex-direction: column; height/min-height: 100vh
-  .<prefix>-topbar     fixed top bar (see §2)
+  .<prefix>-topbar     fixed top bar, full-width surface (see §2)
+    .<prefix>-wrap     the SAME centered container as the page below
   .<prefix>-page       flex: 1; overflow: auto — the scrollable region
     .<prefix>-wrap     max-width: 1080px; margin: auto; padding → page content
 ```
+
+`.<prefix>-wrap` appears twice on purpose: one centered container, used by both
+the chrome and the body, is what keeps the page on a single grid
+(`archetypes.md`, "One persistent page grid").
 
 Tokens: `--bg` on the app, `--panel` on the topbar, `--border` on topbar
 bottom edge.
@@ -38,43 +56,57 @@ bottom edge.
 
 A flex row containing the brand, nav links, spacer, and action buttons.
 
-> **Chrome shares the page grid (2026-08-14, WI-3 prototype review):** the
-> topbar's surface and border run full-width, but its *contents* sit on the
-> same centered max-width container as the page. Chrome pinned to the
-> viewport edge while content is centered creates two competing left edges,
-> and the whole page reads as indented even though it's mathematically
-> centered. Wrap the topbar contents in the same `.<prefix>-wrap` container
-> the page uses. And match the chrome's *density* to the page's: on a dense
-> instrument-panel UI a spacious 52px+ topbar with a generously padded
-> active pill reads as a separate design regime — keep it ~46–48px with a
-> quiet selected-tab treatment (low-contrast fill, tight padding), not a
-> button.
+> **Chrome shares the page grid — implementation of a page-level rule.** The
+> normative statement lives in `archetypes.md`, "One persistent page grid"
+> (whole-page layout is that file's job, per its stated boundary): the topbar's
+> surface and border run full-width, but its *contents* sit on the same centered
+> max-width container as the page, because chrome pinned to the viewport edge
+> while content is centered creates two competing left edges and the whole page
+> reads as indented even though it is mathematically centered. **Here is how:**
+> wrap the topbar's contents in the same `.<prefix>-wrap` container the page
+> uses (§1), and put the height on that wrap, not on the full-width bar.
+>
+> **Chrome density matches page density (2026-08-14, WI-3 prototype review) —
+> this one is the topbar's own rule.** On a dense instrument-panel UI a spacious
+> 52px+ topbar with a generously padded active pill reads as a separate design
+> regime. Keep the bar ~46–48px, and give the selected tab a *quiet* treatment —
+> low-contrast fill, tight padding, not a button. The code block below is the
+> ratified version; earlier copies of this catalog prescribed 58px, an unwrapped
+> bar, and a `--panel-3` active pill at `6px 12px`. Those are superseded.
 
 ```
-.<prefix>-topbar       display: flex; align-items: center; height: 58px;
-                        background: var(--panel); border-bottom: 1px solid var(--border)
+.<prefix>-topbar       background: var(--panel);
+                        border-bottom: 1px solid var(--border)
+                        -- surface + border run full-width...
 
-  .<prefix>-wordmark   flex-shrink: 0; display: flex; align-items: center; gap: 8px
-    .<prefix>-mark     accent-coloured icon or initial
-    .<prefix>-name     font-family: var(--font-mono); font-weight: 600
-    .<prefix>-ver      font-size: var(--fs-xs); color: var(--text-3)
+  .<prefix>-wrap       display: flex; align-items: center; height: 46px;
+                        max-width: 1080px; margin: 0 auto; padding → page padding
+                        -- ...but contents sit on the page's grid (§1, same wrap)
 
-  .<prefix>-nav        display: flex; gap: 2px; margin-left: 24px
-    a                  padding: 6px 12px; border-radius: var(--radius-sm)
-    a:hover            background: var(--panel-2)
-    a.active           background: var(--panel-3); color: var(--accent)
+    .<prefix>-wordmark   flex-shrink: 0; display: flex; align-items: center; gap: 8px
+      .<prefix>-mark     accent-coloured icon or initial
+      .<prefix>-name     font-family: var(--font-mono); font-weight: 600
+      .<prefix>-ver      font-size: var(--fs-xs); color: var(--text-3)
 
-  .<prefix>-spacer     flex: 1
+    .<prefix>-nav        display: flex; gap: 2px; margin-left: 24px
+      a                  padding: 4px 8px; border-radius: var(--radius-sm);
+                          color: var(--text-2)
+      a:hover            color: var(--text)
+      a.active           background: var(--panel-2); color: var(--accent)
+                          -- quiet selected tab: one elevation step, tight
+                             padding. NOT --panel-3, NOT button padding.
 
-  .<prefix>-iconbtn    width: 36px; height: 36px; display: flex;
-                        align-items: center; justify-content: center;
-                        border-radius: var(--radius-sm); cursor: pointer
-                        background: transparent; border: none; color: var(--text-2)
-  .<prefix>-iconbtn:hover  background: var(--panel-2)
+    .<prefix>-spacer     flex: 1
+
+    .<prefix>-iconbtn    width: 36px; height: 36px; display: flex;
+                          align-items: center; justify-content: center;
+                          border-radius: var(--radius-sm); cursor: pointer
+                          background: transparent; border: none; color: var(--text-2)
+    .<prefix>-iconbtn:hover  background: var(--panel-2)
 ```
 
-Tokens: `--panel`, `--panel-2`, `--panel-3`, `--border`, `--text-2`, `--accent`,
-`--radius-sm`, `--font-mono`.
+Tokens: `--panel`, `--panel-2`, `--border`, `--text`, `--text-2`, `--text-3`,
+`--accent`, `--radius-sm`, `--font-mono`, `--fs-xs`.
 
 ## 3 — Buttons
 
@@ -132,18 +164,44 @@ Tokens: `--panel`, `--border`, `--radius-lg`.
 > and a stat that restates the table below it gets cut. On an *inventory*
 > page, counts are filter-bar scope chips instead — there a count's job is
 > to filter.
+>
+> **Corrected 2026-08-15.** This section previously described "a grid of metric
+> cards" on a non-clickable `repeat(4, 1fr)` recipe. That is verbatim the
+> **decorative summary** that `archetypes.md` names as the Dashboard's banned
+> failure mode — the catalog was codifying the shape the archetype bans. The
+> ratified grammar (Plan 007 WI-3 review, Q4) is below.
 
-A grid of metric cards with hairline dividers — the dashboard "instrument
-panel" feel.
+**Segmented clickable cells on one surface — integrated scopes, not metric
+cards.** The strip is a *control*: each cell scopes the object list beneath it,
+carries an active state, and is a link or button, not a `<div>`. Its cells sit
+inside a single bordered surface divided by hairlines; they never become
+individually bordered cards. The cell count comes from the domain's questions —
+its urgency buckets or scopes, cert-watch has five — not from the grid. The old
+`repeat(4, 1fr)` baked a layout default into a semantic decision; four cells is
+perfectly fine when the domain has four things to say. (What `archetypes.md`
+bans is the *decorative* summary, not the count.)
+
+If a summary value is genuinely *not* an interaction with the object set below,
+it does not belong in the strip. Give it a quieter treatment elsewhere (a
+cross-reference link, an exception control that is silent at zero) rather than a
+sixth cell that looks like a filter and isn't — the strip's semantic contract is
+"these are scopes over the inventory immediately below."
 
 ```
-.<prefix>-stats        display: grid; grid-template-columns: repeat(4, 1fr);
+.<prefix>-stats        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
                         border: 1px solid var(--border); border-radius: var(--radius-lg);
                         overflow: hidden
+                        -- ONE surface; cell count is domain-driven, not fixed at 4
 
-.<prefix>-stat         padding: 14px 16px;
-                        border-left: 1px solid var(--border)
-.<prefix>-stat:first-child  border-left: none
+a.<prefix>-stat        display: block; padding: 10px 14px;      -- compressed
+                        border-left: 1px solid var(--border);
+                        color: inherit; text-decoration: none
+                        -- a link (or button): clicking scopes the list below
+a.<prefix>-stat:first-child  border-left: none
+a.<prefix>-stat:hover        background: var(--row-hover)
+a.<prefix>-stat.active       background: var(--panel-2)
+                        -- reflects the filter currently applied
 
 .<prefix>-stat-label   font-family: var(--font-mono); font-size: 10.5px;
                         text-transform: uppercase; letter-spacing: 0.05em;
@@ -152,9 +210,12 @@ panel" feel.
                         font-weight: 600; font-variant-numeric: tabular-nums;
                         color: var(--text)
 .<prefix>-stat-sub     font-size: var(--fs-xs); color: var(--text-3); margin-top: 2px
+                        -- the semantic line: "none" / "needs attention",
+                           zero renders neutral
 ```
 
-Tokens: `--border`, `--radius-lg`, `--text`, `--text-3`, `--font-mono`, `--fs-xs`.
+Tokens: `--border`, `--panel-2`, `--radius-lg`, `--row-hover`, `--text`,
+`--text-3`, `--font-mono`, `--fs-xs`.
 
 ## 7 — Pill (status indicator)
 
@@ -295,7 +356,18 @@ Tokens: `--border`, `--accent`, `--bg`.
 2. Start with the app shell (§1), topbar (§2), and buttons (§3) — they give
    you a recognisably "family" frame with minimal CSS.
 3. Add stat strips, tables, pills, and chips as the tool's views need them.
-4. Use the tokens from `token-contract.md` for every colour, size, and space —
-   never hardcode a hex or pixel value.
+4. **Colours and spacing come from tokens.** Never write a raw colour — no
+   `#hex`, no `rgb()`, no named colour — in tool CSS; draw every one from
+   `token-contract.md`. Take sizes and spaces from the `--space-*`, `--radius-*`
+   and `--fs-*` scales rather than inventing parallel values.
+
+   The px figures in this catalog (46px, 10.5px, 24px, 1080px, 0.05em…) are
+   **reference geometry, not values to paste.** They record the shapes the
+   family converged on where no token exists — component heights, optical type
+   sizes below `--fs-xs`, the page max-width. Reproduce the *geometry*; if you
+   find yourself repeating one, it wants a tool-prefixed token (`--cw-topbar-h`)
+   or promotion into the contract. This is why `check_patina.py` ratchets raw
+   colour literals mechanically but deliberately does **not** ratchet px: this
+   catalog itself specifies px paddings, so a px ratchet would be all noise.
 5. Domain-specific patterns (posture grids, grade badges) are fine — just build
    them on the same tokens.

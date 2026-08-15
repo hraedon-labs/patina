@@ -1,7 +1,12 @@
 # patina page archetypes (structure tier 2)
 
 `patterns.md` covers component shapes. This document covers whole pages — how
-a tool's screens are laid out — in two tiers with different rules.
+a tool's screens are laid out — in two tiers with different rules. **Where the
+two meet:** when a page-level rule constrains a component's shape, the normative
+statement lives *here* and `patterns.md` carries the implementation with a
+pointer back. The live case is the topbar — "One persistent page grid" below
+says its contents sit on the page's centered container; `patterns.md` §2 shows
+the markup that does it.
 
 **The criterion (revised 2026-08-14 after blind review):** a page's structure
 arises from the domain's operational questions, not from a generic archetype —
@@ -78,18 +83,38 @@ gets a stable vertical axis, and full-width elements above/below read as
 shoved aside. Facts that would create a one-row column belong in an existing
 region instead (the page-header baseline is usually free real estate).
 
+**The chrome is part of that grid.** The topbar's surface and border run
+full-width, but its *contents* — wordmark, nav, actions — sit on the same
+centered max-width container as the page body. Chrome pinned to the viewport
+edge while content is centered creates two competing left edges, and the whole
+page reads as indented even though it is mathematically centered. Implementation
+in `patterns.md` §2 (which also carries the topbar's own density rule: ~46–48px,
+quiet selected tab).
+
 **The element-rejection test:** for any proposed addition (issuer pie chart,
 scan success %, average lifetime, added-this-month…) the question is never
 "is this interesting" or "do dashboards traditionally have it" — it is *what
 operator question does this answer on this page?* No good answer, no
 placement.
 
-## Tier 1 — invisible shapes: standardize aggressively
+## Tier 1 — the frame and the invisible shapes: standardize aggressively
 
-Tables, form fields, chips, pills, callouts, empty states, breadcrumbs,
-chains (`patterns.md` §§4, 7–14). These carry no authorship signal — nobody
-clocks a table as machine-made. Use the canonical shapes everywhere, without
-variation for variation's sake. Coherence here is pure win.
+Two groups, one rule. Between them they account for every `patterns.md` section
+except §6, which is Tier 2. (Before 2026-08-15 this taxonomy silently skipped
+§§1, 2, 3 and 5 — including §2, which carries a normative rule.)
+
+**The frame — `patterns.md` §1 (app shell), §2 (topbar + navigation).** Every
+family tool wears the same chrome. There is no per-tool differentiation to
+protect here beyond the accent, and a shell that varies per tool is the fastest
+way for the family to stop reading as one product line. Standardize verbatim.
+The topbar's *page-level* constraint is stated above ("One persistent page
+grid"), not in the catalog.
+
+**The invisible shapes — `patterns.md` §3 (buttons), §4 (inputs), §5 (panel),
+§§7–14 (pill, chip, table, empty state, callout, drop zone, breadcrumb,
+chain).** These carry no authorship signal — nobody clocks a table or a submit
+button as machine-made. Use the canonical shapes everywhere, without variation
+for variation's sake. Coherence here is pure win.
 
 ## Tier 2 — page archetypes: deliberate grammar, named failure modes
 
@@ -99,6 +124,45 @@ Every page names its archetype (in its surface brief — see
 optimized away by the next agent session that finds the failure mode more
 natural. If a page genuinely needs a different structure, amend this file in
 the same PR; never override locally.
+
+### Banned failure modes that apply to every archetype
+
+Carried in 2026-08-15 from Plan 007's "banned defaults to name in v1". They were
+proposed there, never written into this file, and never explicitly dropped —
+so until now they were neither in force nor withdrawn. Each is stated here with
+the rule-test answer it has to pass. (The fourth item on that list, the
+4-stat-card hero, was **retracted** by Plan 007's own blind review and is *not*
+banned — see the Dashboard entry, where a segmented version of that shape is the
+ratified grammar.)
+
+- **Hero → three feature cards, on any page.** *Why:* it is marketing grammar —
+  a landing page persuading a visitor to adopt a product — applied to a tool the
+  operator has already chosen and opened. The three cards are always equal
+  weight and usually non-actionable, so the first viewport, the page's strongest
+  position, spends itself on navigation-as-decoration. The failure it prevents:
+  an operator who opened the tool to answer "what is wrong right now" gets a
+  pitch instead, and scrolls past it every visit. If three destinations genuinely
+  need equal billing, that is the nav's job.
+
+- **Card-in-card nesting.** *Why:* the surface ramp (`--panel` → `--panel-2` →
+  `--panel-3`) is a small, finite vocabulary for saying "this is different".
+  Spending a level on mere containment leaves nothing to distinguish a selected,
+  interactive, or alerting element from the box it happens to sit in, and the
+  operator loses the ability to read elevation as meaning. It also costs a
+  border plus padding of horizontal rhythm per level, which is how a page starts
+  breaking "One persistent page grid" from the inside. Group with spacing, a
+  hairline, or a mono section label instead; a second surface needs a reason
+  beyond "these things are related."
+
+- **Centered-everything on data pages.** *Why:* comparing identifiers,
+  timestamps, and counts down a column depends on a fixed left scan edge.
+  Centering text of varying length destroys it — the eye re-finds the start of
+  every line, and near-identical values (two fingerprints, two dates) stop being
+  visually diffable, which is the operator decision these pages exist to
+  support. **This bans centered *content alignment*, not the centered page
+  column:** the max-width container is the family grid (`patterns.md` §§1–2) and
+  stays. Centering remains correct for genuinely single-object, low-density
+  states — the empty state (`patterns.md` §10) is centered by design.
 
 ### Dashboard (posture at a glance)
 

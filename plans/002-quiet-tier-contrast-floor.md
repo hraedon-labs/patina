@@ -1,6 +1,11 @@
 # Plan 002 — quiet-tier contrast floor (--text-3 meets WCAG 2.2 AA)
 
-**Status:** Draft — proposed 2026-07-29. Blocks dossier Plan 024 Phase 5
+**Status:** Draft — proposed 2026-07-29; **partially executed, noted
+2026-08-15.** WI-3 shipped as `scripts/check_contrast.py` (built under Plan 004
+WI-3, which extended this plan's script); it reports `--text-3` as a *warning*
+rather than failing, precisely because WI-1's values decision is still
+outstanding. WI-1, WI-2 and WI-4 remain open, so the substance of this plan is
+undecided and "Draft" still describes it. Blocks dossier Plan 024 Phase 5
 qualification (WCAG 2.2 AA) and weakens every face that renders metadata in
 the quiet tier. **Human decision required:** the exact replacement values (the
 quiet tier is family identity; candidates below are measured, not chosen).
@@ -48,7 +53,7 @@ warm-gray hue family (R >= G >= B, low chroma). Measured candidates:
   header comment noting the contract change, and re-run `sync.sh <tool>` for
   each consumer (gpo-lens, cert-watch, dossier, sluice) — deliberately, one PR
   per tool, per the family vendoring rule.
-- **WI-3 — Contrast gate.** Add a tiny `check-contrast.py` (stdlib-only): fail
+- **WI-3 — DONE — Contrast gate.** Add a tiny `check-contrast.py` (stdlib-only): fail
   if any declared text/status/accent token falls under 4.5:1 on its declared
   surfaces (text pairs) or 3:1 (non-text UI/focus indicators). Run it in
   patina's CI so future token edits can't regress the floor.
