@@ -132,16 +132,10 @@ case(
     expect="EDITED after vendoring",
 )
 
-case(
-    "edited token value WITH a recomputed stamp is caught by --upstream",
-    True,
-    lambda tmp, static: rewrite_block(
-        static, get_block(static).replace("--crit: #cc6050", "--crit: #ff00ff"), True
-    ),
-    "--upstream",
-    str(ROOT),
-    expect="DRIFTED from upstream",
-)
+# The edited-and-re-stamped case lives in selftest_upstream_version_semantics
+# instead: it needs an upstream whose working tree and HEAD agree, or the case
+# passes whenever this checkout merely has uncommitted changes -- i.e. for the
+# wrong reason.
 
 case(
     "violations appended below patina:end are not exempt",
@@ -281,6 +275,147 @@ def selftest_sync_refuses():
 
 
 selftest_sync_refuses()
+
+
+def _git(repo, *args):
+    return subprocess.run(
+        ["git", "-C", str(repo), *args], capture_output=True, text=True
+    )
+
+
+def _commit(repo, msg):
+    _git(repo, "add", "-A")
+    _git(
+        repo,
+        "-c", "user.email=selftest@example.invalid",
+        "-c", "user.name=selftest",
+        "commit", "-qm", msg,
+    )
+
+
+def selftest_upstream_version_semantics():
+    """A newer patina is an available upgrade, not a conformance failure.
+
+    The first version of check_upstream compared against the upstream WORKING
+    TREE, so a single commit to patina reported every consumer in the estate as
+    DRIFTED -- reintroducing exactly the cross-repo coupling vendoring exists to
+    avoid. Drift is measured against the revision the copy is stamped with.
+
+    Built from a copied-and-committed patina so the fixture's working tree and
+    HEAD agree by construction, rather than depending on this checkout's state.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        up = tmp / "patina-up"
+        shutil.copytree(ROOT, up, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+        _git(up, "init", "-q")
+        _commit(up, "fixture")
+
+        static = tmp / "static"
+        (static / "css").mkdir(parents=True)
+        (static / "css" / "tool.css").write_text(
+            ".x { color: var(--text); }\n", encoding="utf-8"
+        )
+        subprocess.run(
+            [str(up / "sync.sh"), "--no-theme", "cert-watch", str(static), str(tmp)],
+            capture_output=True,
+            text=True,
+        )
+        ratchet = tmp / "ratchet.json"
+
+        def run(*extra):
+            return subprocess.run(
+                [
+                    PY, str(tmp / "patina-check.py"), str(static),
+                    "--prefix", "tl", "--no-theme",
+                    "--ratchet-file", str(ratchet), *extra,
+                ],
+                capture_output=True,
+                text=True,
+            )
+
+        run("--update-ratchet")
+
+        proc = run("--upstream", str(up))
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0 and "matches patina at its stamped rev" in out,
+                "a current vendored copy verifies against its stamped rev",
+                proc.returncode,
+                out.strip().splitlines(),
+            )
+        )
+
+        # patina moves on. The consumer has not changed and is still conformant.
+        tokens = up / "tokens.css"
+        tokens.write_text(
+            tokens.read_text(encoding="utf-8").replace(
+                "--info: #60aeda", "--info: #60aedb"
+            ),
+            encoding="utf-8",
+        )
+        _commit(up, "advance patina")
+        proc = run("--upstream", str(up))
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0 and "upgrade is available" in out,
+                "a newer upstream is reported as an upgrade, never a failure",
+                proc.returncode,
+                out.strip().splitlines(),
+            )
+        )
+
+        # Editing the block and re-computing its stamp defeats the integrity
+        # check by construction; the pinned-rev comparison is what catches it.
+        toks = static / "css" / "tokens.css"
+        text = toks.read_text(encoding="utf-8")
+        m = re.search(
+            r"(^/\* patina:begin \S+ sha256:)([0-9a-f]{64})( \*/$\n)(.*?)(^/\* patina:end \*/$)",
+            text,
+            re.M | re.S,
+        )
+        tampered = m.group(4).replace("--crit: #cc6050", "--crit: #ff00ff")
+        toks.write_text(
+            text[: m.start()] + m.group(1) + sha(tampered) + m.group(3)
+            + tampered + m.group(5) + text[m.end() :],
+            encoding="utf-8",
+        )
+        proc = run("--upstream", str(up))
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode != 0 and "DRIFTED from patina" in out,
+                "an edited-and-re-stamped block is caught against its pinned rev",
+                proc.returncode,
+                out.strip().splitlines(),
+            )
+        )
+
+        # A stamp naming a revision that no longer exists cannot be verified.
+        toks.write_text(
+            re.sub(
+                r"(/\* patina:begin )\S+( sha256:)",
+                r"\g<1>deadbeef\g<2>",
+                toks.read_text(encoding="utf-8"),
+                count=1,
+            ),
+            encoding="utf-8",
+        )
+        proc = run("--upstream", str(up))
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode != 0 and "does not exist" in out,
+                "a stamped rev absent from upstream is refused, not guessed",
+                proc.returncode,
+                out.strip().splitlines(),
+            )
+        )
+
+
+selftest_upstream_version_semantics()
 
 
 failed = [r for r in results if not r[0]]
