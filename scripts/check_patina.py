@@ -93,6 +93,13 @@ INLINE_STYLE_RE = re.compile(r"""\bstyle\s*=\s*["']([^"']*)["']""", re.IGNORECAS
 ALLOW_RE = re.compile(r"patina-allow:\s*(?P<reason>\S.{3,})")
 ALLOW_MARK = "patina-allow"
 
+# A rendering context patina does not define gets its OWN marker, not the
+# colour-literal one. They mean different things -- "this literal is fine here"
+# versus "this whole block is a context the contract was never written for" --
+# and one reason covers the block rather than each of a dozen declarations.
+CONTEXT_RE = re.compile(r"patina-allow-context:\s*(?P<reason>\S.{3,})")
+CONTEXT_MARK = "patina-allow-context"
+
 RATCHET_VERSION = 2
 
 
@@ -505,7 +512,9 @@ def check_contract(gate: Gate, contract: set, sources, prefix: str | None):
         text = strip_comments_keep_lines(src.text)
         spans = at_rule_interiors(text)
         allowed_lines = {
-            i for i, line in enumerate(src.text.splitlines()) if ALLOW_RE.search(line)
+            i
+            for i, line in enumerate(src.text.splitlines())
+            if CONTEXT_RE.search(line) or ALLOW_RE.search(line)
         }
         for m in TOKEN_DEF_RE.finditer(text):
             name = m.group(1)
@@ -533,10 +542,11 @@ def check_contract(gate: Gate, contract: set, sources, prefix: str | None):
                     continue
                 gate.fail(
                     f"{src.label}:{line_no + 1}: re-maps contract token {name} "
-                    "inside an at-rule with no reason. A rendering context "
-                    "patina does not define (print, forced-colors) is a "
-                    "legitimate case -- mark the line "
-                    "`/* patina-allow: <why this context needs it> */`."
+                    "inside an at-rule with no stated reason. A rendering "
+                    "context patina does not define (print, forced-colors) is "
+                    "legitimate -- put one reason anywhere in the block:\n"
+                    "         /* patina-allow-context: <why this context needs "
+                    "its own mapping> */"
                 )
                 continue
             defined.setdefault(name, src.label)
@@ -684,6 +694,10 @@ def scan_colour_literals(gate: Gate, sources):
         raw_lines = src.text.splitlines()
         exempt = set()
         for i, line in enumerate(raw_lines):
+            # `patina-allow-context:` CONTAINS `patina-allow`, so strip the
+            # context marker before judging this line, or every legitimate
+            # context reason is reported as an allow without a reason.
+            line = CONTEXT_RE.sub("", line)
             if ALLOW_MARK not in line:
                 continue
             if ALLOW_RE.search(line):

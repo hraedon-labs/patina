@@ -637,6 +637,81 @@ def selftest_undefined_classes():
 selftest_undefined_classes()
 
 
+def selftest_css_grammar_boundaries():
+    """Every syntax that has fooled this checker becomes a permanent fixture.
+
+    The severity of a mechanically enforced rule sets the required confidence
+    of its detector: `.ds-btn--crit:hover` was reported as shadowing a status
+    colour, which is the strongest accusation the contract makes, on a line
+    that declares nothing. A cosmetic advisory can tolerate noise; a blocking
+    claim of contract corruption cannot.
+
+    Standing limit, recorded rather than tested: do NOT keep adding regex
+    cleverness to emulate CSS grammar. If the checker needs materially more
+    understanding than this, a real parser is the safer answer.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        static = build_consumer(tmp)
+        tpl = tmp / "templates"
+        tpl.mkdir()
+        (tpl / "p.html").write_text(
+            '<div class="tl-a tl-b tl-c tl-d">x</div>\n', encoding="utf-8"
+        )
+        (static / "css" / "tool.css").write_text(
+            # pseudo-class after a BEM modifier
+            ".tl-a--crit:hover { color: var(--crit); }\n"
+            # selectors nested in @supports
+            "@supports (display: grid) {\n  .tl-a { color: var(--text); }\n}\n"
+            # selectors nested two at-rules deep
+            "@media print {\n  @supports (color: red) {\n"
+            "    .tl-b { color: var(--text); }\n  }\n}\n"
+            # a declaration VALUE that looks like a class, inside a nested
+            # at-rule -- must not mint a definition
+            "@media screen {\n  .tl-c { content: \".tl-phantom\"; }\n}\n"
+            ".tl-d { color: var(--text); }\n",
+            encoding="utf-8",
+        )
+
+        def run(*extra):
+            return subprocess.run(
+                [
+                    PY, str(tmp / "patina-check.py"), str(static),
+                    "--prefix", "tl", "--no-theme", "--extra", str(tpl),
+                    "--ratchet-file", str(tmp / "ratchet.json"), *extra,
+                ],
+                capture_output=True, text=True,
+            )
+
+        run("--update-ratchet")
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode == 0,
+                "CSS grammar boundaries: BEM + @supports + nested at-rules all read correctly",
+                proc.returncode, out.strip().splitlines()[:5],
+            )
+        )
+
+        # The phantom must not become a definition that masks a real dead class.
+        (tpl / "p.html").write_text(
+            '<div class="tl-a tl-b tl-c tl-d tl-phantom">x</div>\n', encoding="utf-8"
+        )
+        proc = run()
+        out = proc.stdout + proc.stderr
+        results.append(
+            (
+                proc.returncode != 0 and "tl-phantom" in out,
+                "a class name appearing only in a declaration value is not a definition",
+                proc.returncode, out.strip().splitlines()[:4],
+            )
+        )
+
+
+selftest_css_grammar_boundaries()
+
+
 def selftest_regression_from_adoptions():
     """Defects the three adoptions found in the gate itself. Each was patina
     accusing a consumer of a violation the consumer had not committed."""
@@ -711,7 +786,7 @@ def selftest_regression_from_adoptions():
         out = proc.stdout + proc.stderr
         results.append(
             (
-                proc.returncode != 0 and "with no reason" in out,
+                proc.returncode != 0 and "with no stated reason" in out,
                 "an unexplained at-rule re-map of a contract token is refused",
                 proc.returncode, out.strip().splitlines()[:4],
             )
@@ -719,8 +794,9 @@ def selftest_regression_from_adoptions():
 
         (static / "css" / "tool.css").write_text(
             "@media print {\n"
-            "  :root { --bg: #fff; /* patina-allow: paper substrate is not ours to choose */\n"
-            "          --text: #000; /* patina-allow: printers omit backgrounds */ }\n"
+            "  /* patina-allow-context: paper is not a context patina defines; the\n"
+            "     substrate colour is not the document's to choose */\n"
+            "  :root { --bg: #fff; --text: #000; }\n"
             "}\n",
             encoding="utf-8",
         )
@@ -731,6 +807,18 @@ def selftest_regression_from_adoptions():
             (
                 proc.returncode == 0 and "re-mapped inside at-rules" in out,
                 "an at-rule re-map WITH a stated reason is legal and reported",
+                proc.returncode, out.strip().splitlines()[:6],
+            )
+        )
+
+        # `patina-allow-context:` contains `patina-allow` as a substring, so
+        # the colour-literal scanner must not read a legitimate context reason
+        # as an allow with no reason. Overlapping marker names, found by the
+        # fixture above rather than in a consumer.
+        results.append(
+            (
+                "without a reason" not in out,
+                "the context marker is not mistaken for a bare colour allow",
                 proc.returncode, out.strip().splitlines()[:4],
             )
         )

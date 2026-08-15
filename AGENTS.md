@@ -82,3 +82,55 @@ review overturned it):
 A token change ripples to every tool. Prefer additive changes. If you change a
 shared value, note it and re-sync each consuming tool deliberately (each tool's
 vendored `css/tokens.css` is regenerated, not merged).
+
+## Adoption doctrine (empirical, after four consumers)
+
+Written down 2026-08-15 after cert-watch, gpo-lens, dossier and openbia. Short
+on purpose — this is what the adoptions actually taught, not a plan.
+
+1. **An adoption tests both sides.** It is not the standard judging a consumer,
+   and it is not legacy consumers being grandfathered. It is a bidirectional
+   test that finds the defect on whichever side is wrong. dossier is the clean
+   example: patina was wrong about print-context shadowing, patina's checker
+   was buggy in two places, patina's facet vocabulary was incomplete — *and*
+   dossier turned out to be genuinely wrong about `review_note` versus comment
+   `body`.
+2. **When conformance pushes toward a worse architecture, investigate the rule
+   before changing the consumer.** When a gate systematically rewards
+   circumvention, the gate is wrong. The print rule's cheapest compliance route
+   was to re-plumb components onto tool-local aliases so they stopped
+   referencing contract tokens at all: greener checker, weaker contract.
+3. **Every checker false positive becomes a permanent regression fixture**,
+   built from the syntax that actually fooled it. See
+   `scripts/selftest_patina.py`.
+4. **Local needs are legal when explicitly scoped.** Recurrence *within* a
+   consumer establishes a local pattern; independent recurrence *across*
+   consumers triggers review for promotion — review, not automatic promotion.
+   This applies to page archetypes and to rendering contexts alike.
+5. **A semantic rule is validated by whether it finds real defects**, not by
+   whether consumers can be made green. The content-model rule found dossier's
+   duplicated control before anyone knew that defect existed. That is the
+   difference between a standard and a bug checklist.
+
+### Two derived rules for the checker
+
+- **The severity of a mechanically enforced rule sets the required confidence
+  of its detector.** A cosmetic advisory can tolerate noise. A blocking
+  accusation of contract corruption cannot — `TOKEN_DEF_RE` told dossier it had
+  shadowed a status colour, on a line that declared nothing, and the implied
+  remedy was to damage valid CSS.
+- **Do not indefinitely add regex cleverness to emulate CSS grammar.** The
+  brace-parity bug is the warning. If the checker needs materially more
+  understanding of the grammar than it has now, a real parser is the safer
+  answer than another clever pattern.
+
+### Choosing the next consumer
+
+Pick the most **structurally different** remaining tool, not the messiest.
+Heterogeneous consumers act as fuzz cases for the design system, and the open
+question is which of patina's assumptions are family invariants versus
+cert-watch coincidences. cert-watch exposed the danger of deriving structure
+from generic archetypes; gpo-lens exposed assumptions about read-only tools,
+attestation and relationship-centric pages; dossier exposed rendering-context
+assumptions, parser defects and facet vocabulary. Internal completeness is
+worth much less right now than the next different consumer.
