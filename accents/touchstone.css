@@ -1,0 +1,23 @@
+/* patina accent: touchstone — cupric, the yellow-green of copper salts.
+
+   Deliberately NOT verdigris (gpo-lens, #5fb3a3, hue ~168): this sits at hue ~88,
+   a yellow-green, so the two tools are told apart at a glance rather than by
+   memory. It is also held well clear of the status tokens it shares a page with —
+   --ok is mint (hue ~155) and --warn is amber (hue ~43) — because touchstone
+   renders a great many coloured figures and an accent that could be misread as
+   "this number is fine" would undo the point of labelling them carefully.
+
+   Concatenated after tokens.css to override the default accent. */
+:root,
+:root[data-theme="dark"] {
+  --accent: #86c05a;
+  --accent-2: #86c05a;
+  --accent-soft: rgba(134, 192, 90, 0.13);
+  --accent-line: rgba(134, 192, 90, 0.42);
+}
+:root[data-theme="light"] {
+  --accent: #4a7a24;
+  --accent-2: #4a7a24;
+  --accent-soft: rgba(74, 122, 36, 0.10);
+  --accent-line: rgba(74, 122, 36, 0.38);
+}
