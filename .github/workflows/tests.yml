@@ -1,0 +1,17 @@
+name: tests
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: bash -n sync.sh scripts/test-sync.sh
+      - name: Run sync smoke test
+        run: ./scripts/test-sync.sh
+      - name: Run theme toggle test
+        run: node scripts/test-theme.js

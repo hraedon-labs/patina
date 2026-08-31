@@ -53,6 +53,8 @@ Each tool picks one distinct, non-status accent. "Same metal, different finish."
 | cert-watch | struck bronze (certificate seal) | `#c9a25a` | `#8a6a28` |
 | gpo-lens | verdigris (patinated bronze) | `#5fb3a3` | `#2c7d6e` |
 | dossier | plum (registry seal) | `#b07cc6` | `#7a4d8f` |
+| sluice | aqua (flow/water register) | `#5fcde4` | `#2a8ca8` |
+| touchstone | cupric (yellow-green of copper salts) | `#86c05a` | `#4a7a24` |
 | _(default)_ | neutral warm steel | `#b9a98c` | `#6f6552` |
 
 When adding a tool, choose an accent that is (1) not another tool's, (2) not a

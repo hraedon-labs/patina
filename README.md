@@ -1,9 +1,9 @@
 # patina
 
 The shared visual identity for the instrument-panel tool family — cert-watch,
-gpo-lens, and their siblings. patina is the **coherence layer**: a small set of
-design tokens, the family typeface, a theme toggle, and a script that vendors
-them into each tool. It is intentionally not a component framework.
+gpo-lens, dossier, sluice, and touchstone. patina is the **coherence layer**: a
+small set of design tokens, the family typeface, a theme toggle, and a script
+that vendors them into each tool. It is intentionally not a component framework.
 
 ## Why it exists
 
@@ -14,17 +14,20 @@ explicit and copyable instead of re-derived per tool (which is how drift
 starts).
 
 The metaphor: **same metal, different finish.** A warm-charcoal "instrument
-panel, not a cold SaaS night theme." cert-watch is the struck bronze of a
-certificate seal; gpo-lens is verdigris, the blue-green patina of aged bronze.
-Every tool shares the metal (the neutrals, type, spacing, status hues) and
-overrides one thing: `--accent`.
+panel, not a cold SaaS night theme." The finishes are cert-watch's struck bronze
+(certificate seal, dark `#c9a25a`, light `#8a6a28`); gpo-lens's verdigris
+(patinated bronze, dark `#5fb3a3`, light `#2c7d6e`); dossier's plum (registry
+seal, dark `#b07cc6`, light `#7a4d8f`); sluice's aqua (flow/water register, dark
+`#5fcde4`, light `#2a8ca8`); and touchstone's cupric (copper salts, dark
+`#86c05a`, light `#4a7a24`). Every tool shares the metal (the neutrals, type,
+spacing, status hues) and overrides one thing: `--accent`.
 
 ## What's in here
 
 | Path | What it is |
 |------|------------|
 | `tokens.css` | **The contract.** Surfaces, text, status colours, type scale, space scale, radii, fonts, base element styles — as CSS custom properties. Source of truth. |
-| `accents/<tool>.css` | One small file per tool that overrides `--accent` (dark + light). `cert-watch` = bronze, `gpo-lens` = verdigris. |
+| `accents/<tool>.css` | One small file per tool that overrides `--accent` (dark + light): `cert-watch` = struck bronze, `gpo-lens` = verdigris, `dossier` = plum, `sluice` = aqua, `touchstone` = cupric. |
 | `theme.js` | Dark/light toggle. Loads in `<head>` before paint; key is per-tool via `data-theme-key`. |
 | `fonts/` | IBM Plex Mono (self-hosted woff2, OFL). |
 | `sync.sh` | Vendors the above into a tool's static dir. |
@@ -58,6 +61,11 @@ registry, the vendoring script, and the rationale.
 **Out / non-goals:** a component library or class framework (each tool keeps its
 own components — for now; see `plans/001`); a build step or bundler; any
 JavaScript framework; per-tool layout.
+
+## Tests
+
+Run `node scripts/test-theme.js` for the theme toggle and `scripts/test-sync.sh`
+for vendoring.
 
 ## Adding a new tool
 
