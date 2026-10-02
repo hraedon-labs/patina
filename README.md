@@ -27,7 +27,7 @@ overrides one thing: `--accent`.
 |------|------------|
 | `tokens.css` | **The contract.** Surfaces, text, status colours, type scale, space scale, radii, fonts, base element styles — as CSS custom properties. Source of truth. |
 | `accents/<tool>.css` | One small file per tool that overrides `--accent` (dark + light). `cert-watch` = bronze, `gpo-lens` = verdigris. |
-| `theme.js` | Dark/light toggle. Loads in `<head>` before paint; key is per-tool via `data-theme-key`. |
+| `theme.js` | Dark/light toggle. Loads in `<head>` before paint; key is per-tool via `data-theme-key`. Normalizes saved values, updates the button's action label and follows changes from other tabs using the same key. |
 | `fonts/` | IBM Plex Mono (self-hosted woff2, OFL). |
 | `sync.sh` | Vendors the above into a tool's static dir. |
 | `docs/token-contract.md` | The canonical token list and the rules for using it. |
@@ -35,6 +35,19 @@ overrides one thing: `--accent`.
 | `docs/archetypes.md` | Page archetypes (structure tier 2) — how whole screens are laid out, with banned failure modes. |
 | `docs/content-model.md` | The concept layer — which concepts a record exposes and where each one lives. |
 | `scripts/` | The conformance gate (`check_patina.py`) and the contrast gate (`check_contrast.py`), stdlib-only. |
+
+The theme bootstrap retains the dark-first default (Plan 003 is still awaiting
+an owner decision). Only saved `dark` and `light` values are applied; other
+values fall back to dark without rewriting storage. Removing the preference
+in another tab restores that default. The toggle works even when storage is
+unavailable, although that choice cannot persist. Its accessible name and
+tooltip describe the next action, including on tools without the optional
+`theme-icon-dark` / `theme-icon-light` elements.
+
+Run `node scripts/selftest_theme.mjs` for the theme boundary self-test (Node 24,
+standard modules only; no package installation). CI runs it alongside the
+Python gates. Re-sync consumers deliberately to deliver a theme change;
+existing vendored copies remain unchanged until then.
 
 ## How a tool consumes patina
 

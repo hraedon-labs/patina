@@ -19,6 +19,14 @@ jobs:
       - name: Contrast floors (WCAG 2.2, both themes, every accent)
         run: python3 scripts/check_contrast.py
 
+      - name: Set up Node for the shared theme bootstrap
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Theme preference, storage and accessible action self-test
+        run: node scripts/selftest_theme.mjs
+
       # The gate's refusals are the product. This replays every bypass found in
       # the 2026-08-15 audit and fails if any of them stops being refused.
       - name: Conformance-gate self-test
