@@ -16,7 +16,9 @@ Checks:
                        Consumers may append CSS below the end marker -- that
                        tail is checked like any other tool CSS (checks 3+4).
   2. theme.js stamp -- first line // patina:sha256 <hash> must match the rest
-                       of the file's bytes.
+                       of the file's bytes. With --upstream, also compare the
+                       theme against its own stamped revision; a newer theme
+                       is an available upgrade, not a conformance failure.
   3. token contract -- every var(--x) referenced in tool CSS must be defined
                        by the contract block or by the tool itself; the tool
                        must not redefine a contract token; with --prefix, all
@@ -81,6 +83,7 @@ BEGIN_RE = re.compile(
 END_RE = re.compile(r"^/\* patina:end \*/$", re.M)
 ACCENT_RE = re.compile(r"^/\* accent: (?P<accent>[A-Za-z0-9._-]+) \*/$", re.M)
 THEME_STAMP_RE = re.compile(r"^// patina:sha256 (?P<hash>[0-9a-f]{64})")
+THEME_REV_RE = re.compile(r"^// patina:sha256 [0-9a-f]{64} rev:(?P<rev>\S+)$")
 SELF_STAMP_RE = re.compile(r"^# patina:sha256 (?P<hash>[0-9a-f]{64}) rev:(?P<rev>\S+)$")
 # The `--` must start an identifier, or `.ds-btn--primary:hover` reads as a
 # declaration of `--primary` -- and `.ds-btn--crit:hover` as shadowing a status
@@ -446,7 +449,7 @@ def check_docs(gate: Gate, docs_dir: Path, upstream: Path | None, declared_versi
         )
 
 
-def check_theme(gate: Gate, theme_path: Path):
+def check_theme(gate: Gate, theme_path: Path, upstream: Path | None = None):
     if not theme_path.is_file():
         gate.fail(f"theme.js missing: {theme_path}")
         return
@@ -459,8 +462,47 @@ def check_theme(gate: Gate, theme_path: Path):
         return
     if sha256_text(rest) != m.group("hash"):
         gate.fail("theme.js: bytes differ from stamp -- edited or stale; re-sync")
-    else:
-        gate.ok("theme.js intact")
+        return
+    gate.ok("theme.js intact")
+    if upstream is None:
+        return
+
+    # Theme and token copies can be updated independently. Use the theme's
+    # own revision, not the token block's revision or the upstream worktree.
+    rm = THEME_REV_RE.fullmatch(first.rstrip("\r\n"))
+    if rm is None:
+        gate.fail(
+            "theme.js: no revision in its stamp -- integrity was checked, "
+            "but comparison with upstream needs a recorded revision; re-sync"
+        )
+        return
+    rev = rm.group("rev")
+    if _git(upstream, "rev-parse", "--git-dir") is None:
+        gate.fail("theme.js: --upstream is not a git checkout; cannot verify its revision")
+        return
+    if _git(upstream, "cat-file", "-e", f"{rev}^{{commit}}") is None:
+        gate.fail(
+            f"theme.js: stamped revision {rev} does not exist in {upstream} "
+            "-- fetch the recorded history or deliberately re-sync"
+        )
+        return
+    pinned = _git(upstream, "show", f"{rev}:theme.js")
+    if pinned is None:
+        gate.fail(f"patina {rev} does not contain theme.js; cannot verify this theme")
+        return
+    if sha256_text(pinned) != sha256_text(rest):
+        gate.fail(
+            f"theme.js DRIFTED from patina {rev}: its contents do not match "
+            "the revision it records -- commit the change in patina and re-sync"
+        )
+        return
+    gate.ok(f"theme.js matches patina at its stamped rev {rev}")
+    current = _git(upstream, "show", "HEAD:theme.js")
+    if current is not None and sha256_text(current) != sha256_text(rest):
+        gate.note(
+            f"theme.js upgrade is available since {rev}. Adopting it is a "
+            "deliberate re-sync with a reviewable diff, not a conformance failure."
+        )
 
 
 def tool_css_sources(static_dir: Path, tokens_path: Path, extra_dirs=()):
@@ -1157,8 +1199,8 @@ def main():
         "--upstream",
         type=Path,
         default=None,
-        help="path to a patina checkout; re-derives the vendored block from it "
-        "and reports real drift instead of mere integrity",
+        help="path to a patina checkout; verifies tokens and theme against "
+        "their recorded revisions and reports drift separately from upgrades",
     )
     ap.add_argument(
         "--docs",
@@ -1225,7 +1267,7 @@ def main():
             declared_version = str(decl["patina"].get("version", "")).strip() or None
         check_docs(gate, args.docs, args.upstream, declared_version)
     if not args.no_theme:
-        check_theme(gate, static_dir / args.theme)
+        check_theme(gate, static_dir / args.theme, args.upstream)
     sources = tool_css_sources(static_dir, tokens_path, args.extra)
     if tail_src is not None:
         sources.append(tail_src)

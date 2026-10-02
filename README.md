@@ -49,6 +49,17 @@ standard modules only; no package installation). CI runs it alongside the
 Python gates. Re-sync consumers deliberately to deliver a theme change;
 existing vendored copies remain unchanged until then.
 
+With `check_patina.py --upstream <checkout>`, the vendored theme is compared
+with its own recorded Git revision as well as its local hash. A theme edited
+and re-stamped in a consumer fails that comparison. A newer committed upstream
+theme is reported as an available upgrade; uncommitted upstream edits do not
+change the reference. Themes and tokens may have independent valid revisions.
+Without `--upstream`, a legacy hash-only theme stamp still checks integrity;
+upstream comparison requires a revision-bearing stamp from `sync.sh`.
+Commit changed theme source before syncing it, so the recorded revision really
+contains the bytes being delivered.
+Run `python3 scripts/selftest_theme_upstream.py` for this contract's tests.
+
 ## How a tool consumes patina
 
 Vendored, not installed. From a patina checkout:

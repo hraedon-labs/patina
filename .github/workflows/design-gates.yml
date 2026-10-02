@@ -32,6 +32,9 @@ jobs:
       - name: Conformance-gate self-test
         run: python3 scripts/selftest_patina.py
 
+      - name: Theme conformance against recorded upstream revisions
+        run: python3 scripts/selftest_theme_upstream.py
+
       # patina must satisfy its own contract: vendoring into a scratch consumer
       # and checking it proves sync.sh and the checker agree on the format.
       - name: Vendor into a scratch consumer and check it
