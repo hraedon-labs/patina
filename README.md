@@ -4,8 +4,7 @@ The shared visual identity for the instrument-panel tool family — cert-watch,
 gpo-lens, and their siblings. patina is the **coherence layer**: a small set of
 design tokens, the family typeface, a theme toggle, and a script that vendors
 them into each tool — plus, decided 2026-08-14, a **reference component
-implementation** that new tools vendor wholesale (see Scope; decided, not yet
-built).
+implementation** that new tools vendor wholesale (see Scope).
 
 ## Why it exists
 
@@ -28,6 +27,9 @@ overrides one thing: `--accent`.
 | `tokens.css` | **The contract.** Surfaces, text, status colours, type scale, space scale, radii, fonts, base element styles — as CSS custom properties. Source of truth. |
 | `accents/<tool>.css` | One small file per tool that overrides `--accent` (dark + light). `cert-watch` = bronze, `gpo-lens` = verdigris. |
 | `theme.js` | Dark/light toggle. Loads in `<head>` before paint; key is per-tool via `data-theme-key`. Normalizes saved values, updates the button's action label and follows changes from other tabs using the same key. |
+| `components.css` | Optional `pt-` reference implementation of the 14 catalog shapes, with their applicable states. |
+| `macros/ui.j2` | Jinja macros for controls and collections; no consumer-specific filters or icons. |
+| `examples/components.html.j2` | Synthetic inventory example using only tokens and reference components. |
 | `fonts/` | IBM Plex Mono (self-hosted woff2, OFL). |
 | `sync.sh` | Vendors the above into a tool's static dir. |
 | `docs/token-contract.md` | The canonical token list and the rules for using it. |
@@ -100,10 +102,34 @@ scratch per tool. Measured 2026-08-14: four parallel component layers
 implementing the same 14 shapes with drifting details. Full rationale in
 `docs/token-contract.md` and `plans/006`.
 
-**Status of that decision: ratified, not built.** Neither `components.css` nor
-`macros/ui.j2` exists yet — Plan 006 WI-2 (extract), WI-3 (prove on a thin
-consumer), WI-4 (document) are open. Until they ship, `docs/patterns.md` is the
-whole delivery of the shared shapes and every tool still implements them itself.
+**Status: reference code and documentation delivered 2026-10-02.** Plan 006
+WI-2 (extract) and WI-4 (document) are implemented. The synthetic inventory
+example exercises states and real scope links without consumer CSS. WI-3
+(live agent-notes adoption) remains open; no existing tool was retrofitted.
+
+Opt in explicitly, keeping templates outside the served static root:
+
+```bash
+./sync.sh --components ../tool/templates cert-watch ../tool/static ../tool/tests
+python3 ../tool/tests/patina-check.py ../tool/static \
+  --components ../tool/templates --extra ../tool/templates --prefix pt \
+  --ratchet-file ../tool/tests/patina-ratchet.json --upstream .
+```
+
+Link `css/components.css` after `css/tokens.css`; import `macros/ui.j2` in your
+Jinja environment. Both files have delimited, hashed ownership blocks with
+their own Git revision. The checker verifies integrity and, with `--upstream`,
+compares each against its recorded source revision. New upstream code is an
+upgrade notice, not a failure. Commit source changes before syncing them.
+Existing hand-written files are refused unless `--adopt` first backs them up;
+consumer tails survive re-sync and still participate in normal conformance
+checks, including `.j2` templates. Default sync does not deliver components.
+
+Run `python3 scripts/selftest_components.py` for the stdlib-only ownership and
+safe-sync checks. Macro tests use Jinja 3.1.6 as a test dependency:
+`python3 -m unittest discover -s tests`. The shipped checker remains stdlib-only
+and patina still has no package or build step. See [component usage](docs/components.md)
+for macro arguments and responsibilities.
 
 **Out / non-goals:** a *mandatory* class framework — existing tools keep their
 own prefixes (`cw-`, `gp-`, `ds-`) and adopt the reference implementation
@@ -116,6 +142,7 @@ bundler; any JavaScript framework; per-tool layout.
 
 1. Add `accents/<tool>.css` with a distinct, non-status accent (dark + light).
    Record the choice in `docs/token-contract.md`.
-2. Run `sync.sh <tool> <its static dir>`.
-3. Link `css/tokens.css` and load `theme.js` in the tool's base template; set
+2. Run `sync.sh --components <its templates dir> <tool> <its static dir>`.
+3. Link `css/tokens.css` then `css/components.css`, import `macros/ui.j2`, and
+   load `theme.js` in the tool's base template; set
    `<html data-theme-key="<tool>-theme">`.

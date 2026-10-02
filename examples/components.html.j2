@@ -1,0 +1,57 @@
+{% import "macros/ui.j2" as ui %}
+<!doctype html>
+<html lang="en" data-theme-key="patina-example-theme">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; font-src 'self'; img-src 'self'; form-action 'self'; base-uri 'none'">
+<title>Patina component example</title>
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/components.css">
+<script src="/theme.js"></script>
+</head>
+<body class="pt-app">
+<header class="pt-topbar"><div class="pt-wrap">
+<a class="pt-wordmark" href="/normal.html"><span class="pt-mark" aria-hidden="true">P</span><span class="pt-name">Patina</span><span class="pt-ver">example</span></a>
+{{ ui.nav([('/normal.html', 'Inventory', true, false), ('/empty.html', 'Empty', false, false), ('/error.html', 'Unavailable', false, false)]) }}
+<span class="pt-spacer"></span>{{ ui.icon_button('Switch to light theme', 'T', id='theme-toggle') }}
+</div></header>
+<main class="pt-page"><div class="pt-wrap">
+{{ ui.breadcrumb([('/normal.html', 'Example'), (none, 'Inventory')]) }}
+<h1>Inventory</h1>
+<p>Synthetic objects for exercising the shared components. No live service is connected.</p>
+{% call ui.stats(state=state) %}
+{{ ui.stat('Needs attention', 3, '/attention.html', sub='Review first', tone='crit', active=scope == 'attention') }}
+{{ ui.stat('Scheduled', 4, '/scheduled.html', sub='Upcoming work', tone='info', active=scope == 'scheduled') }}
+{{ ui.stat('All objects', 12, '/normal.html', sub='Current scope', active=scope == 'all') }}
+{% endcall %}
+{% call ui.panel('Objects') %}
+{{ ui.table(headers|default(['Name', 'State', 'Owner']), rows, 'Object inventory', state=state) }}
+{% endcall %}
+{% call ui.panel('Controls') %}
+<form id="example-form" action="/normal.html" method="get">
+<div class="pt-form-row">
+{{ ui.field('object-name', 'name', 'Object name', help='A human-readable name.', required=true) }}
+{{ ui.select('object-state', 'state', 'State', [('current', 'Current'), ('review', 'Needs review')], selected='current', help='Choose the observed state.') }}
+</div>
+{{ ui.button('Save example', type='submit', primary=true, id='save-example') }}
+{{ ui.button('Saving', loading=true) }}
+{{ ui.button('Unavailable', disabled=true) }}
+</form>
+{% endcall %}
+{% call ui.panel('Known states') %}
+<p>{{ ui.pill('Current', 'ok') }} {{ ui.pill('Needs review', 'warn') }} {{ ui.pill('Unavailable', 'crit') }} {{ ui.pill('Unknown') }} {{ ui.chip('Synthetic data') }}</p>
+{{ ui.callout('A status label explains the colour; colour is not the only signal.', 'info') }}
+{{ ui.field('invalid-name', 'invalid-name', 'Validation example', value='Example', error='Choose a unique name.', help='The error slot is always reserved.') }}
+{{ ui.field('readonly-name', 'readonly-name', 'Read-only example', value='Observed value', readonly=true) }}
+{{ ui.select('unavailable-choice', 'unavailable-choice', 'No choices yet', []) }}
+{% endcall %}
+{% call ui.panel('File input') %}
+{{ ui.dropzone('backup-file', 'backup-file', 'Choose a backup file', help='Selection stays in this example.', accept='.json') }}
+{% endcall %}
+{% call ui.panel('Precedence') %}
+{{ ui.chain([('First choice', 'Preferred source'), ('Second choice', 'Fallback source')], state=state) }}
+{% endcall %}
+</div></main>
+</body>
+</html>

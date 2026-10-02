@@ -33,6 +33,32 @@ counter is the obvious next step. It does not need to be yet.
 
 ---
 
+## 0.6.0 — 2026-10-02
+
+```
+visual-change: opt-in pt- reference components; existing component layers stay consumer-owned
+baseline-review: yes, when first adopting the reference implementation
+consumer-code-change: opt-in sync/checker flags, stylesheet link and macro imports
+```
+
+Plan 006's reference implementation now ships: the 14 catalog shapes in
+`components.css`, Jinja macros in `macros/ui.j2`, applicable state sets and a
+synthetic inventory example. Form validation reserves an error line and keeps
+control heights/border widths stable. Collection states explain empty,
+loading and unavailable data; zero and unknown values retain neutral styling.
+
+`sync.sh --components <templates-dir>` delivers ownership-stamped components,
+preflights collisions and preserves consumer tails byte-for-byte. `--adopt`
+backs up hand-written destinations before replacement. The gate compares
+component files against their own recorded source revisions; `.j2` templates
+join normal colour/class checks. Default sync does not adopt a component layer.
+The planned live agent-notes adoption remains open.
+
+The shared theme normalizes saved preferences, labels the next action and
+follows same-key storage changes across tabs. Theme conformance now compares
+the vendored file with its recorded Git revision and reports newer source as
+an optional upgrade. Dark-first behavior and token values are unchanged.
+
 ## 0.5.0 — 2026-08-15
 
 ```

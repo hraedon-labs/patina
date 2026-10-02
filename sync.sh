@@ -2,7 +2,8 @@
 # patina/sync.sh — vendor the shared design tokens into a consuming tool.
 #
 # Usage:
-#   ./sync.sh [--no-theme] [--adopt] <accent> <target-static-dir> [checks-dir]
+#   ./sync.sh [--no-theme] [--adopt] [--components <templates-dir>]
+#             <accent> <target-static-dir> [checks-dir]
 #
 #   <accent>             name of an accents/<accent>.css file (e.g. gpo-lens)
 #   <target-static-dir>  the tool's static root (must contain, or will get,
@@ -18,6 +19,11 @@
 #               css/tokens.css, or repair malformed markers. The existing file
 #               is backed up to css/tokens.css.pre-patina-<timestamp> first.
 #               Without this flag, sync refuses rather than overwrite.
+#   --components <templates-dir>
+#               opt in to css/components.css and <templates-dir>/macros/ui.j2.
+#               Keep the template directory outside the served static root.
+#               Both files have stamped ownership blocks; consumer tails are
+#               preserved. Existing unmarked files require --adopt + backup.
 #
 # Example (from a patina checkout):
 #   ./sync.sh gpo-lens   ../gpo-lens/src/gpo_lens/web/static
@@ -41,9 +47,8 @@
 #                      # patina:sha256 line so a consumer cannot quietly weaken
 #                      the gate. Consumers run it in CI.
 #
-# The tool keeps its OWN component CSS (its cw-/gp- classes) in a separate file
-# and links it after tokens.css. patina owns only the token contract + fonts +
-# theme toggle.
+# Existing tools keep their component CSS by default. With --components, link
+# the reference stylesheet after tokens.css and import macros/ui.j2 in Jinja.
 #
 # NOTE ON WHAT THE STAMP PROVES: the block hash lives next to the block, so on
 # its own it proves integrity, not currency. For real drift detection the
@@ -60,10 +65,12 @@ usage() {
 want_theme=1
 adopt=0
 docs_dir=""
+components_templates_dir=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --no-theme) want_theme=0; shift ;;
     --adopt)    adopt=1; shift ;;
+    --components) components_templates_dir="${2:-}"; [ -n "$components_templates_dir" ] && [[ "$components_templates_dir" != --* ]] || { echo "error: --components needs a template directory" >&2; exit 2; }; shift 2 ;;
     --docs)     docs_dir="${2:-}"; [ -n "$docs_dir" ] || { echo "error: --docs needs a directory" >&2; exit 2; }; shift 2 ;;
     -h|--help)  usage ;;
     --*)        echo "error: unknown flag: $1" >&2; exit 2 ;;
@@ -92,6 +99,45 @@ if [ ! -d "$target" ]; then
 fi
 
 out="$target/css/tokens.css"
+
+# Validate component destinations before any existing token file is changed.
+# A hand-written ui.j2/components.css must never disappear on first adoption.
+component_problem() {
+  local path="$1" kind="$2" begin end n_begin n_end component_cr
+  [ -e "$path" ] || return 0
+  if [ ! -f "$path" ]; then echo "destination is not a regular file"; return 0; fi
+  if [ "$kind" = css ]; then
+    begin='^/\* patina:begin .* \*/'; end='^/\* patina:end \*/'
+  else
+    begin='^{# patina:begin .* #}'; end='^{# patina:end #}'
+  fi
+  component_cr=$'\r'
+  begin="${begin}${component_cr}\?$"; end="${end}${component_cr}\?$"
+  n_begin="$(grep -c "$begin" "$path" || true)"
+  n_end="$(grep -c "$end" "$path" || true)"
+  if [ "$n_begin" -ne 1 ] || [ "$n_end" -ne 1 ]; then
+    echo "missing or malformed ownership markers ($n_begin begin, $n_end end)"
+  elif [ "$(grep -n "$end" "$path" | cut -d: -f1)" -lt "$(grep -n "$begin" "$path" | cut -d: -f1)" ]; then
+    echo "end marker appears before begin marker"
+  fi
+}
+
+if [ -n "$components_templates_dir" ]; then
+  if [ ! -f "$here/components.css" ] || [ ! -f "$here/macros/ui.j2" ]; then
+    echo "error: this checkout is missing the reference component source files" >&2
+    exit 1
+  fi
+  for pair in "css:$target/css/components.css" "jinja:$components_templates_dir/macros/ui.j2"; do
+    kind="${pair%%:*}"; destination="${pair#*:}"
+    problem="$(component_problem "$destination" "$kind")"
+    if [ -n "$problem" ]; then
+      if [ ! -f "$destination" ] || [ "$adopt" -eq 0 ]; then
+        echo "error: refusing to overwrite $destination: $problem. Use --adopt to back up a hand-maintained file first." >&2
+        exit 1
+      fi
+    fi
+  done
+fi
 
 # ---------------------------------------------------------------------------
 # Marker validation — FAIL CLOSED.
@@ -156,7 +202,7 @@ rev="$(git -C "$here" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 # that land between the delimiters.
 block="$(mktemp)"
 tail_tmp="$(mktemp)"
-trap 'rm -f "$block" "$tail_tmp"' EXIT
+trap 'rm -f "$block" "$tail_tmp" "${component_tail:-}"' EXIT
 {
   cat "$here/tokens.css"
   echo ""
@@ -203,6 +249,47 @@ check_hash="$(tail -n +2 "$check_src" | sha256sum | cut -d' ' -f1)"
   tail -n +2 "$check_src"
 } > "$checks_dir/patina-check.py"
 chmod +x "$checks_dir/patina-check.py"
+
+vendor_component() {
+  local source="$1" destination="$2" kind="$3" hash begin end problem backup end_line
+  problem="$(component_problem "$destination" "$kind")"
+  component_tail="$(mktemp)"
+  if [ "$kind" = css ]; then
+    begin="/* patina:begin $rev"; end='/* patina:end */'
+  else
+    begin="{# patina:begin $rev"; end='{# patina:end #}'
+  fi
+  if [ -f "$destination" ]; then
+    if [ -n "$problem" ]; then
+      backup="$destination.pre-patina-$(date +%Y%m%d%H%M%S)-$$"
+      cp "$destination" "$backup"
+      echo "note: --adopt: backed up $destination -> $backup" >&2
+    else
+      end_line="$(grep -nFx -e "$end" -e "$end"$'\r' -- "$destination" | cut -d: -f1)"
+      tail -n +"$((end_line + 1))" "$destination" > "$component_tail"
+    fi
+  fi
+  mkdir -p "$(dirname "$destination")"
+  hash="$(sha256sum "$source" | cut -d' ' -f1)"
+  {
+    if [ "$kind" = css ]; then
+      echo "/* VENDORED FROM patina -- do not edit the owned block. */"
+      echo "$begin sha256:$hash */"
+    else
+      echo "{# VENDORED FROM patina -- do not edit the owned block. #}"
+      echo "$begin sha256:$hash #}"
+    fi
+    cat "$source"
+    echo "$end"
+    cat "$component_tail"
+  } > "$destination"
+  rm -f "$component_tail"
+}
+
+if [ -n "$components_templates_dir" ]; then
+  vendor_component "$here/components.css" "$target/css/components.css" css
+  vendor_component "$here/macros/ui.j2" "$components_templates_dir/macros/ui.j2" jinja
+fi
 
 # ---------------------------------------------------------------------------
 # --docs: ship the RULES, not just the values.
@@ -270,6 +357,9 @@ else
 fi
 echo "  fonts/          ($(ls "$here/fonts"/*.woff2 | wc -l | tr -d ' ') woff2 + licence)"
 echo "  patina-check.py -> $checks_dir/ (stamped)"
+if [ -n "$components_templates_dir" ]; then
+  echo "  css/components.css + $components_templates_dir/macros/ui.j2 (stamped)"
+fi
 if [ -n "$docs_dir" ]; then
   echo "  docs/           -> $docs_dir/ ($(ls "$here"/docs/*.md | wc -l | tr -d ' ') files + manifest + OWNERSHIP.md)"
 fi

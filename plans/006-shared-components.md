@@ -10,8 +10,9 @@ done on the strength of the decision alone, while four documents still stated
 the reversed position. The decision and its rationale are now recorded in
 `README.md` (Scope), `AGENTS.md` ("What patina is (and isn't)"),
 `docs/token-contract.md` ("Shared component patterns") and `docs/patterns.md`
-(intro); each of those also states plainly that the components are **not
-built**. WI-2..4 (extraction, agent-notes proof, docs) not yet built.
+(intro). **2026-10-02: WI-2 and WI-4 delivered locally**, with reference code,
+ownership gates, template tests and a synthetic inventory example. WI-3's
+live agent-notes adoption remains open and was outside this non-AOS pass.
 **Owner:** patina. Depends on Plan 005 (the gate is what makes shared code
 safe to share).
 
@@ -58,13 +59,13 @@ Hybrid, weighted by cost:
   framework"; this plan amends that to "a reference implementation new tools
   vendor". Recorded in README scope, AGENTS.md, `docs/token-contract.md`, and
   `docs/patterns.md`.
-- **WI-2 — OPEN — Extract.** Build `components.css` + `macros/ui.j2` from cert-watch's
+- **WI-2 — DONE 2026-10-02 — Extract.** Built `components.css` + `macros/ui.j2` from cert-watch's
   macros and `patterns.md`; every shape gets its state set; ASCII-only (family
   IIS rule).
 - **WI-3 — OPEN — Prove on a thin consumer.** agent-notes is the cheapest live
   candidate (8 templates, currently unstyled): adopt tokens + components
   wholesale; it becomes the reference example of "new tool, zero own CSS".
-- **WI-4 — OPEN — Document.** `patterns.md` sections point at their `pt-` counterparts;
+- **WI-4 — DONE 2026-10-02 — Document.** `patterns.md` sections point at their `pt-` counterparts;
   add "when to extend vs. when to request" — a tool needing a new shape adds it
   to patina (with states) or prefixes it as tool-local; never per-page CSS.
   (This kills the cert-watch `NEEDED-CSS.md` wishlist pattern by giving the
@@ -74,11 +75,44 @@ Hybrid, weighted by cost:
 
 - **NOT MET (WI-3)** — agent-notes runs the family look with no component CSS
   of its own.
-- **NOT MET (WI-2)** — the state-set rule is checkable: every `pt-` component
+- **MET 2026-10-02 (WI-2)** — the state-set rule is checkable: every `pt-` component
   section documents its states inline; the empty state exists for every
   collection-rendering shape.
 - **MET 2026-08-15 (WI-1)** — charter + token-contract updated with the
   decision and its rationale.
+
+## Implementation and verification, 2026-10-02
+
+The catalog's 14 shapes now have scoped CSS sections with their applicable
+states. The macro vocabulary starts from cert-watch's status/stat/empty/caller
+patterns; domain-specific urgency filters, icons, charts and grades remain in
+the consumer. Fields/selects/buttons share a 36px control height, reserved
+error slots and fixed border widths. Status always includes text; zero and
+unknown counts are neutral. The frame retains the shared page grid and wraps
+its chrome on narrow screens. No token values or theme default changed.
+
+`sync.sh --components <templates-dir>` is opt-in and delivers delimited,
+hashed CSS and Jinja blocks. It preflights collisions before token writes,
+backs up unmarked originals only with `--adopt`, and preserves consumer tails.
+The checker verifies both components against their own pinned source revision;
+new source revisions are upgrade notices. `.j2` files join normal CSS/class
+checks. Existing sync behavior and existing consumers remain unchanged.
+Source components are LF-pinned by `.gitattributes`; checks accept Git's CRLF
+transport in a consumer while retaining byte-exact local tails. This prevents
+a normal Windows checkout from being reported as corrupted source. Edited and
+restamped content still fails comparison with its recorded Git revision.
+
+Verification: 19 disposable-source ownership/sync tests, 22 real Jinja macro
+tests, the existing 45 conformance cases and 64 Chromium cases. Browser cases
+cover normal/filtered/empty/loading/error/long/wide-content pages in both themes at
+1280, 720, 375 and 320px, real scope navigation, native required validation,
+label focus, disabled controls, file selection, stable error geometry and
+local table scrolling without page overflow. The example has no component
+CSS of its own. This is synthetic proof, not a claim that WI-3's live
+consumer acceptance is met.
+The existing contrast gate retains its four known Plan 002 warnings for
+muted text; this change does not alter those token values or claim full-page
+WCAG conformance.
 
 ## If declined
 

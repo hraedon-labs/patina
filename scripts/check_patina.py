@@ -81,6 +81,10 @@ BEGIN_RE = re.compile(
     r"^/\* patina:begin (?P<rev>\S+) sha256:(?P<hash>[0-9a-f]{64}) \*/$", re.M
 )
 END_RE = re.compile(r"^/\* patina:end \*/$", re.M)
+JINJA_BEGIN_RE = re.compile(
+    r"^\{# patina:begin (?P<rev>\S+) sha256:(?P<hash>[0-9a-f]{64}) #\}$", re.M
+)
+JINJA_END_RE = re.compile(r"^\{# patina:end #\}$", re.M)
 ACCENT_RE = re.compile(r"^/\* accent: (?P<accent>[A-Za-z0-9._-]+) \*/$", re.M)
 THEME_STAMP_RE = re.compile(r"^// patina:sha256 (?P<hash>[0-9a-f]{64})")
 THEME_REV_RE = re.compile(r"^// patina:sha256 [0-9a-f]{64} rev:(?P<rev>\S+)$")
@@ -188,15 +192,15 @@ def check_self(gate: Gate):
         gate.ok(f"checker intact (patina {m.group('rev')})")
 
 
-def split_vendored(text: str):
+def split_vendored(text: str, begin_re=BEGIN_RE, end_re=END_RE):
     """-> (rev, stamp, block, tail, tail_line_offset) or (None, err, ...).
 
     Fails closed. Exactly one begin marker and one end marker, in that order,
     or we refuse to interpret the file at all: every ambiguous shape here is
     either a mangled vendor or a consumer about to lose CSS.
     """
-    begins = list(BEGIN_RE.finditer(text))
-    ends = list(END_RE.finditer(text))
+    begins = list(begin_re.finditer(text))
+    ends = list(end_re.finditer(text))
     if not begins and not ends:
         return None, "no stamped patina block found", None, None, 0
     if len(begins) != 1 or len(ends) != 1:
@@ -505,6 +509,64 @@ def check_theme(gate: Gate, theme_path: Path, upstream: Path | None = None):
         )
 
 
+def check_component(gate: Gate, path: Path, source: str, upstream: Path | None = None):
+    """Verify owned component bytes and their own pinned source revision.
+
+    CSS and Jinja use comment delimiters native to their file format. Consumer
+    tails remain outside the owned block and are never part of its hash.
+    """
+    if not path.is_file():
+        gate.fail(f"{source} missing: {path}")
+        return
+    try:
+        # Git may transport a text file as CRLF on Windows. Canonical LF
+        # matches the source's .gitattributes and the token/theme text policy.
+        text = path.read_bytes().decode("utf-8").replace("\r\n", "\n")
+    except (OSError, UnicodeDecodeError) as exc:
+        gate.fail(f"{source}: cannot read UTF-8 component ({type(exc).__name__})")
+        return
+    patterns = (JINJA_BEGIN_RE, JINJA_END_RE) if source.endswith(".j2") else (BEGIN_RE, END_RE)
+    rev, stamp, block, _tail, _offset = split_vendored(text, *patterns)
+    if rev is None:
+        gate.fail(f"{source}: {stamp}")
+        return
+    if sha256_text(block) != stamp:
+        gate.fail(f"{source}: owned bytes differ from stamp -- re-sync")
+        return
+    gate.ok(f"{source} intact")
+    if upstream is None:
+        return
+    if _git(upstream, "rev-parse", "--git-dir") is None:
+        gate.fail(f"{source}: --upstream is not a git checkout")
+        return
+    if _git(upstream, "cat-file", "-e", f"{rev}^{{commit}}") is None:
+        gate.fail(f"{source}: stamped revision {rev} does not exist -- fetch recorded history")
+        return
+
+    def source_bytes(revision):
+        proc = subprocess.run(
+            ["git", "-C", str(upstream), "show", f"{revision}:{source}"], capture_output=True,
+        )
+        return proc.stdout if proc.returncode == 0 else None
+
+    pinned = source_bytes(rev)
+    if pinned is None:
+        gate.fail(f"patina {rev} does not contain {source}")
+        return
+    if pinned != block.encode("utf-8"):
+        gate.fail(f"{source} DRIFTED from patina {rev} -- commit source changes and re-sync")
+        return
+    gate.ok(f"{source} matches patina at its stamped rev {rev}")
+    current = source_bytes("HEAD")
+    if current is not None and current != pinned:
+        gate.note(f"{source} upgrade is available since {rev}; deliberate re-sync, not a failure")
+
+
+def markup_files(root: Path):
+    """HTML and reference Jinja files participate in the same checks."""
+    return sorted(set(root.rglob("*.html")) | set(root.rglob("*.j2")))
+
+
 def tool_css_sources(static_dir: Path, tokens_path: Path, extra_dirs=()):
     """Every chunk of CSS the tool owns: non-vendored .css files, <style> blocks
     and inline style="..." attributes in .html. The vendored tokens.css is
@@ -516,7 +578,7 @@ def tool_css_sources(static_dir: Path, tokens_path: Path, extra_dirs=()):
             if p.resolve() == tokens_path.resolve():
                 continue
             sources.append(Source(p.name, p.read_text(encoding="utf-8")))
-        for p in sorted(root.rglob("*.html")):
+        for p in markup_files(root):
             text = p.read_text(encoding="utf-8")
             for i, block in enumerate(STYLE_BLOCK_RE.findall(text)):
                 sources.append(Source(f"{p.name}<style#{i + 1}>", block))
@@ -666,7 +728,7 @@ def collect_class_usage(static_dir: Path, extra_dirs, prefix: str):
     """
     used = {}
     for root in (static_dir, *extra_dirs):
-        for p in sorted(root.rglob("*.html")):
+        for p in markup_files(root):
             for i, line in enumerate(p.read_text(encoding="utf-8").splitlines()):
                 for attr in CLASS_ATTR_RE.findall(line):
                     if "{" in attr:
@@ -1181,6 +1243,11 @@ def main():
     ap.add_argument("--tokens", default="css/tokens.css")
     ap.add_argument("--theme", default="theme.js")
     ap.add_argument(
+        "--components", type=Path, default=None, metavar="TEMPLATES_DIR",
+        help="check css/components.css and TEMPLATES_DIR/macros/ui.j2 ownership "
+        "and their recorded upstream revisions (opt-in reference components)",
+    )
+    ap.add_argument(
         "--no-theme",
         action="store_true",
         help="consumer owns its theme bootstrap (e.g. a CSP-nonced inline "
@@ -1199,7 +1266,7 @@ def main():
         "--upstream",
         type=Path,
         default=None,
-        help="path to a patina checkout; verifies tokens and theme against "
+        help="path to a patina checkout; verifies tokens, theme and components against "
         "their recorded revisions and reports drift separately from upgrades",
     )
     ap.add_argument(
@@ -1268,6 +1335,9 @@ def main():
         check_docs(gate, args.docs, args.upstream, declared_version)
     if not args.no_theme:
         check_theme(gate, static_dir / args.theme, args.upstream)
+    if args.components is not None:
+        check_component(gate, static_dir / "css/components.css", "components.css", args.upstream)
+        check_component(gate, args.components / "macros/ui.j2", "macros/ui.j2", args.upstream)
     sources = tool_css_sources(static_dir, tokens_path, args.extra)
     if tail_src is not None:
         sources.append(tail_src)

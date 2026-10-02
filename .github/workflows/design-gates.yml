@@ -35,6 +35,17 @@ jobs:
       - name: Theme conformance against recorded upstream revisions
         run: python3 scripts/selftest_theme_upstream.py
 
+      - name: Reference component ownership and safe sync
+        run: python3 scripts/selftest_components.py
+
+      # Jinja is used by consumer applications and by these template tests.
+      # The shipped checkers remain stdlib-only; no package or build step.
+      - name: Install the template-test dependency
+        run: python3 -m pip install Jinja2==3.1.6
+
+      - name: Reference macro semantics and escaping
+        run: python3 -m unittest discover -s tests
+
       # patina must satisfy its own contract: vendoring into a scratch consumer
       # and checking it proves sync.sh and the checker agree on the format.
       - name: Vendor into a scratch consumer and check it
@@ -43,11 +54,11 @@ jobs:
           work="$(mktemp -d)"
           mkdir -p "$work/static/css"
           printf '.x { color: var(--text); }\n' > "$work/static/css/tool.css"
-          ./sync.sh --no-theme --docs "$work/docs" cert-watch "$work/static" "$work"
+          ./sync.sh --no-theme --docs "$work/docs" --components "$work/templates" cert-watch "$work/static" "$work"
           python3 "$work/patina-check.py" "$work/static" \
-            --prefix tl --no-theme --docs "$work/docs" \
+            --prefix pt --no-theme --docs "$work/docs" --components "$work/templates" --extra "$work/templates" \
             --ratchet-file "$work/ratchet.json" --update-ratchet
           python3 "$work/patina-check.py" "$work/static" \
-            --prefix tl --no-theme --docs "$work/docs" \
+            --prefix pt --no-theme --docs "$work/docs" --components "$work/templates" --extra "$work/templates" \
             --ratchet-file "$work/ratchet.json" \
             --upstream .

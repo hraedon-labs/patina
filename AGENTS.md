@@ -21,8 +21,10 @@ sync script) for the tool family. Read `README.md` for the what/why and
   opportunistically. This reverses the old "intentionally not a component
   framework" charter line: prose describing shapes is a re-implementation task
   for every agent that reads it, and four parallel component layers were the
-  measured result. **Ratified, not built** — Plan 006 WI-2/3/4 are open, so
-  neither file exists yet; `docs/patterns.md` is still the whole delivery.
+  measured result. **Reference code delivered 2026-10-02** — Plan 006 WI-2
+  and WI-4 are implemented, with ownership gates, macro tests and a synthetic
+  example. WI-3 (live agent-notes adoption) remains open. `--components`
+  is opt-in for existing tools; never silently replace their component layer.
 - It is consumed **vendored** (copied via `sync.sh`), not installed as a
   dependency. The chosen tradeoff: zero coupling and no install-time wiring, at
   the cost of re-running `sync.sh` to propagate changes.

@@ -1,0 +1,117 @@
+{# patina reference macros (Plan 006), no consumer filters or icon imports.
+   Text/attributes are escaped explicitly because .j2 need not enable HTML
+   autoescape. Caller blocks are application-authored markup. URLs must be
+   application-validated routes; these macros do not authorize actions.
+   Pass unique HTML ids. Collection state is normal/empty/loading/error. #}
+
+{% macro tone_class(tone) -%}
+{{- tone if tone in ('neutral', 'ok', 'warn', 'crit', 'info', 'accent') else 'neutral' -}}
+{%- endmacro %}
+
+{% macro button(label, primary=false, disabled=false, loading=false, type='button', id=none, name=none, value=none) -%}
+<button class="pt-btn{% if primary %} primary{% endif %}" type="{{ type if type in ('button', 'submit', 'reset') else 'button' }}"{% if id %} id="{{ id|e }}"{% endif %}{% if name %} name="{{ name|e }}"{% endif %}{% if value is not none %} value="{{ value|e }}"{% endif %}{% if disabled or loading %} disabled{% endif %}{% if loading %} aria-busy="true"{% endif %}>{{ label|e }}</button>
+{%- endmacro %}
+
+{% macro icon_button(label, text, id=none, disabled=false) -%}
+<button type="button" class="pt-iconbtn" aria-label="{{ label|e }}" title="{{ label|e }}"{% if id %} id="{{ id|e }}"{% endif %}{% if disabled %} disabled{% endif %}><span aria-hidden="true">{{ text|e }}</span></button>
+{%- endmacro %}
+
+{% macro nav(links, label='Primary navigation', state='normal') -%}
+<nav class="pt-nav" aria-label="{{ label|e }}">
+{% if state == 'loading' %}{{ collection_state('loading', 'Loading navigation') }}
+{% elif state == 'error' %}{{ collection_state('error', 'Navigation unavailable') }}
+{% elif state == 'empty' %}{{ collection_state('empty', 'No navigation items') }}
+{% else %}{% for href, text, active, disabled in links %}
+{% if disabled or not href %}<span class="pt-nav-disabled" aria-disabled="true">{{ text|e }}</span>
+{% else %}<a href="{{ href|e }}"{% if active %} class="active" aria-current="page"{% endif %}>{{ text|e }}</a>{% endif %}
+{% else %}{{ collection_state('empty', 'No navigation items') }}{% endfor %}{% endif %}
+</nav>
+{%- endmacro %}
+
+{% macro field(id, name, label, value='', help='', error='', type='text', required=false, disabled=false, readonly=false, loading=false, placeholder=none) -%}
+<div class="pt-field">
+<label class="pt-label" for="{{ id|e }}">{{ label|e }}</label>
+<input class="pt-input" id="{{ id|e }}" name="{{ name|e }}" type="{{ type|e }}" value="{{ value|e if value is not none else '' }}" aria-describedby="{{ id|e }}-help {{ id|e }}-error" aria-invalid="{{ 'true' if error else 'false' }}"{% if required %} required{% endif %}{% if disabled or loading %} disabled{% endif %}{% if readonly %} readonly{% endif %}{% if loading %} aria-busy="true"{% endif %}{% if placeholder is not none %} placeholder="{{ placeholder|e }}"{% endif %}>
+<span class="pt-help" id="{{ id|e }}-help">{{ help|e }}</span>
+<span class="pt-error" id="{{ id|e }}-error" aria-live="polite">{{ error|e }}</span>
+</div>
+{%- endmacro %}
+
+{% macro select(id, name, label, options, selected=none, help='', error='', required=false, disabled=false, loading=false) -%}
+<div class="pt-field">
+<label class="pt-label" for="{{ id|e }}">{{ label|e }}</label>
+<select class="pt-select" id="{{ id|e }}" name="{{ name|e }}" aria-describedby="{{ id|e }}-help {{ id|e }}-error" aria-invalid="{{ 'true' if error else 'false' }}"{% if required %} required{% endif %}{% if disabled or loading or not options %} disabled{% endif %}{% if loading %} aria-busy="true"{% endif %}>
+{% if loading %}<option value="">Loading choices</option>
+{% else %}{% for value, text in options %}<option value="{{ value|e }}"{% if value|string == selected|string %} selected{% endif %}>{{ text|e }}</option>{% else %}<option value="">No options available</option>{% endfor %}{% endif %}
+</select>
+<span class="pt-help" id="{{ id|e }}-help">{{ help|e }}</span>
+<span class="pt-error" id="{{ id|e }}-error" aria-live="polite">{{ error|e }}</span>
+</div>
+{%- endmacro %}
+
+{% macro panel(title=none) -%}
+<section class="pt-panel pad">{% if title %}<h2>{{ title|e }}</h2>{% endif %}{% if caller is defined %}{{ caller() }}{% endif %}</section>
+{%- endmacro %}
+
+{% macro stats(state='normal', message=none) -%}
+<div class="pt-stats"{% if state == 'loading' %} aria-busy="true"{% endif %}>
+{% if state != 'normal' %}{{ collection_state(state, message) }}{% elif caller is defined %}{{ caller() }}{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro stat(label, value, href, sub='', tone='neutral', active=false, disabled=false) -%}
+{% set tag = 'span' if disabled or not href else 'a' %}
+<{{ tag }} class="pt-stat{% if active %} active{% endif %}"{% if tag == 'a' %} href="{{ href|e }}"{% if active %} aria-current="true"{% endif %}{% else %} aria-disabled="true"{% endif %}>
+<span class="pt-stat-label">{{ label|e }}</span>
+<span class="pt-stat-val{% if value is number and value > 0 %} {{ tone_class(tone if tone != 'accent' else 'neutral') }}{% endif %}">{{ value|e if value is not none else 'Unknown' }}</span>
+{% if sub %}<span class="pt-stat-sub">{{ sub|e }}</span>{% endif %}
+</{{ tag }}>
+{%- endmacro %}
+
+{% macro pill(label, tone='neutral') -%}
+<span class="pt-pill {{ tone_class(tone if tone != 'accent' else 'neutral') }}"><span class="pt-pill-dot" aria-hidden="true"></span>{{ label|e }}</span>
+{%- endmacro %}
+
+{% macro chip(label, tone='neutral') -%}
+<span class="pt-chip {{ tone_class(tone) }}">{{ label|e }}</span>
+{%- endmacro %}
+
+{% macro collection_state(state='empty', message=none, sub='') -%}
+<div class="pt-empty pt-state"{% if state == 'loading' %} role="status"{% elif state == 'error' %} role="alert"{% endif %}>
+<div class="pt-empty-title">{{ (message if message is not none else ('Loading data' if state == 'loading' else 'Unable to load data' if state == 'error' else 'No data yet'))|e }}</div>
+{% if sub %}<div class="pt-empty-sub">{{ sub|e }}</div>{% endif %}
+{% if caller is defined %}<div class="pt-empty-actions">{{ caller() }}</div>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro table(headers, rows, caption, state='normal', message=none) -%}
+<div class="pt-table-wrap" role="region" aria-label="{{ caption|e }}" tabindex="0"{% if state == 'loading' %} aria-busy="true"{% endif %}>
+<table class="pt-table"><caption>{{ caption|e }}</caption><thead><tr>{% for heading in headers %}<th scope="col">{{ heading|e }}</th>{% endfor %}</tr></thead><tbody>
+{% if state == 'normal' and rows %}{% for row in rows %}<tr>{% for value in row %}<td>{{ value|e if value is not none else 'Unknown' }}</td>{% endfor %}</tr>{% endfor %}
+{% else %}<tr><td colspan="{{ [headers|length, 1]|max }}">{{ collection_state('empty' if state == 'normal' else state, message) }}</td></tr>{% endif %}
+</tbody></table></div>
+{%- endmacro %}
+
+{% macro callout(message, tone='info', announce=false) -%}
+<div class="pt-callout {{ tone_class(tone if tone != 'accent' else 'neutral') }}"{% if announce %} role="{{ 'alert' if tone == 'crit' else 'status' }}"{% endif %}>{{ message|e }}{% if caller is defined %}{{ caller() }}{% endif %}</div>
+{%- endmacro %}
+
+{% macro dropzone(id, name, label, help='', error='', disabled=false, loading=false, accept=none, multiple=false) -%}
+<div class="pt-drop{% if error %} error{% endif %}"{% if disabled or loading %} aria-disabled="true"{% endif %}{% if loading %} aria-busy="true"{% endif %}>
+<label for="{{ id|e }}">{{ label|e }}</label>
+<input type="file" id="{{ id|e }}" name="{{ name|e }}" aria-describedby="{{ id|e }}-help {{ id|e }}-error" aria-invalid="{{ 'true' if error else 'false' }}"{% if disabled or loading %} disabled{% endif %}{% if accept %} accept="{{ accept|e }}"{% endif %}{% if multiple %} multiple{% endif %}>
+<span class="pt-help" id="{{ id|e }}-help">{{ help|e }}</span><span class="pt-error" id="{{ id|e }}-error" aria-live="polite">{{ error|e }}</span>
+</div>
+{%- endmacro %}
+
+{% macro breadcrumb(items, label='Breadcrumb') -%}
+{% if items %}<nav class="pt-breadcrumb" aria-label="{{ label|e }}"><ol>
+{% for href, text in items %}<li>{% if href and not loop.last %}<a href="{{ href|e }}">{{ text|e }}</a>{% else %}<span{% if loop.last %} aria-current="page"{% endif %}>{{ text|e }}</span>{% endif %}</li>{% endfor %}
+</ol></nav>{% endif %}
+{%- endmacro %}
+
+{% macro chain(nodes, label='Precedence', state='normal', message=none) -%}
+{% if state == 'normal' and nodes %}<ol class="pt-chain" aria-label="{{ label|e }}">
+{% for title, sub in nodes %}<li class="pt-chain-node"><div class="pt-chain-title">{{ title|e }}</div>{% if sub %}<div class="pt-chain-sub">{{ sub|e }}</div>{% endif %}</li>{% endfor %}
+</ol>{% else %}{{ collection_state('empty' if state == 'normal' else state, message) }}{% endif %}
+{%- endmacro %}

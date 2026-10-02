@@ -107,7 +107,8 @@ names for it.
 
 ### Base helpers shipped in `tokens.css`
 `.mono` `.tnum` `.muted`, link + `:focus-visible` styling, scrollbar, and a
-`prefers-reduced-motion` reset. Everything else is the tool's own components.
+`prefers-reduced-motion` reset. Optional `components.css` supplies the reference
+shapes after this base; domain-specific components remain tool-owned.
 
 ## Accent registry
 
@@ -163,11 +164,12 @@ the wrong delivery — prose for humans instead of code for machines. What made
 the reversal *safe* is Plan 005: shared code is only safe to share once drift
 in a vendored copy fails mechanically.
 
-**Status: ratified, not built.** Neither `components.css` nor `macros/ui.j2`
-exists yet — Plan 006 WI-2 (extract), WI-3 (prove on a thin consumer), WI-4
-(document) are open. Do not write code that assumes a `pt-` class exists.
+**Status: reference implementation delivered 2026-10-02.** `components.css`
+and `macros/ui.j2` ship through opt-in `sync.sh --components <templates-dir>`.
+Plan 006 WI-2 (extract) and WI-4 (document) are implemented; WI-3 (live
+agent-notes adoption) remains open. Existing consumers adopt deliberately.
 
-Until they ship — and after, as the human-readable half — **`patterns.md`**
+The human-readable half, **`patterns.md`**, still
 catalogs the shared component shapes (topbar, stat strip, table, pill, chip,
 callout, panel, empty state, etc.) with canonical structure, token usage, and
 naming conventions, and **`archetypes.md`** covers whole-page structure. New
