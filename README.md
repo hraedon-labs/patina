@@ -53,6 +53,11 @@ The tool links `css/tokens.css`, then its **own** component stylesheet (its
 `cw-`/`gp-` classes) built on the tokens. patina owns the tokens, fonts, and
 toggle; the tool owns its components.
 
+The toggle restores only the exact saved values `dark` and `light`. Missing,
+invalid, or unavailable local storage falls back to dark before first paint.
+Loading the theme leaves storage untouched; an explicit toggle saves the new
+preference under the tool's `data-theme-key` (or `patina-theme` by default).
+
 ## Scope
 
 **In:** the token contract, the family typeface, the theme toggle, the accent

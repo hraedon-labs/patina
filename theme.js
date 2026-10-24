@@ -1,4 +1,4 @@
-/* patina theme toggle — shared across the tool family.
+/* patina theme toggle -- shared across the tool family.
    Load this synchronously in <head> (before the stylesheet) so the theme is
    applied before first paint and there is no flash. The family CSP is
    script-src 'self', which forbids inline JS, so this lives as a file.
@@ -10,7 +10,10 @@
   var root = document.documentElement;
   var KEY = root.getAttribute("data-theme-key") || "patina-theme";
   function get() {
-    try { return localStorage.getItem(KEY) || "dark"; } catch (e) { return "dark"; }
+    try {
+      var stored = localStorage.getItem(KEY);
+      return stored === "dark" || stored === "light" ? stored : "dark";
+    } catch (e) { return "dark"; }
   }
   function apply(t) { root.setAttribute("data-theme", t); }
 
