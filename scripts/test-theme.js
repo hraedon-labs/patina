@@ -146,4 +146,57 @@ function storage(initial) {
   result.fireDOMContentLoaded();
 })();
 
+(function () {
+  ["dark", "light", "sepia", "DARK", "Light", " dark ", "light\n", "false", "0", "null", ""].forEach(function (saved) {
+    var key = "tool-theme";
+    var initial = {};
+    initial[key] = saved;
+    var store = storage(initial);
+    var button = element();
+    var darkIcon = element();
+    var lightIcon = element();
+    var expected = saved === "light" ? "light" : "dark";
+    var label = "saved " + JSON.stringify(saved);
+    var result = run({
+      attributes: { "data-theme-key": key },
+      storage: store,
+      readyState: "loading",
+      elements: {
+        "theme-toggle": button,
+        "theme-icon-dark": darkIcon,
+        "theme-icon-light": lightIcon
+      }
+    });
+    equal(result.attributes["data-theme"], expected, label + " before paint");
+    equal(store.getCalls[0], key, label + " read scoped storage");
+    equal(store.setCalls.length, 0, label + " no storage write on load");
+    equal(store.values[key], saved, label + " saved value preserved on load");
+    equal(button.listeners.click, undefined, label + " wait for DOM");
+    result.fireDOMContentLoaded();
+    equal(darkIcon.style.display, expected === "dark" ? "none" : "block", label + " dark icon");
+    equal(lightIcon.style.display, expected === "dark" ? "block" : "none", label + " light icon");
+
+    button.listeners.click();
+    var next = expected === "dark" ? "light" : "dark";
+    equal(result.attributes["data-theme"], next, label + " first toggle");
+    equal(store.values[key], next, label + " first toggle persisted");
+    equal(store.setCalls[0][0], key, label + " first toggle scoped key");
+    equal(darkIcon.style.display, next === "dark" ? "none" : "block", label + " toggled dark icon");
+    equal(lightIcon.style.display, next === "dark" ? "block" : "none", label + " toggled light icon");
+
+    button.listeners.click();
+    equal(result.attributes["data-theme"], expected, label + " second toggle");
+    equal(store.values[key], expected, label + " second toggle persisted");
+    equal(store.setCalls.length, 2, label + " writes only on explicit toggles");
+  });
+})();
+
+(function () {
+  var button = element();
+  var result = run({ elements: { "theme-toggle": button } });
+  equal(result.attributes["data-theme"], "dark", "unavailable storage fallback");
+  button.listeners.click();
+  equal(result.attributes["data-theme"], "light", "toggle without storage");
+})();
+
 console.log("test-theme: passed");
